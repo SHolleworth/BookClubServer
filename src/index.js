@@ -68,7 +68,7 @@ fs.readFile('../../apiKey.txt', 'utf8', (err, data) => {
         //User login request
         socket.on('login_as_user', async (user) =>{
 
-            userData = {}
+            let userData = {}
 
             const connection = getConnection()
 
@@ -107,6 +107,23 @@ fs.readFile('../../apiKey.txt', 'utf8', (err, data) => {
 
         })
 
+        //Retrieve shelves of user
+        socket.on('retrieve_shelves', async (user) => {
+
+            retrieveShelvesOfUser(user)
+            .then(shelves => {
+                
+                socket.emit('retrieve_shelves_response', shelves)
+
+            })
+            .catch(error => {
+              
+                socket.emit('retrieve_shelves_error', error)
+
+            })
+
+        })
+
 
         //New book to add to database
         socket.on('post_new_book', async (book) =>{
@@ -124,5 +141,34 @@ fs.readFile('../../apiKey.txt', 'utf8', (err, data) => {
             })
 
         })
+
+        //Retrieve books of user
+        socket.on('retrieve_books', async (user) => {
+
+            const data = {}
+
+            retrieveShelvesOfUser(user)
+            .then(shelves => {
+                
+                data.shelves = shelves
+
+                return retrieveBooksOfShelves(shelves)
+
+            })
+            .then(books => {
+
+                data.books = books
+                
+                socket.emit('retrieve_books_response', data)
+
+            })
+            .catch(error => {
+                
+                socket.emit('retrieve_books_error', error)
+                
+            })
+
+            })
+
     })
 })

@@ -11,7 +11,7 @@ const insertUser = async (user) => {
 
         if (connection) {
             
-            const { userId, username, password } = user
+            const { username, password } = user
 
             connection.query(`SELECT * FROM User WHERE username = ?`, [username], (error, result, fields) => {
 
@@ -22,7 +22,7 @@ const insertUser = async (user) => {
                 hashPassword(password)
                     .then(({ hash, salt }) => {
 
-                        return insertUserSQL(connection, userId, username, hash, salt)
+                        return insertUserSQL(connection, username, hash, salt)
 
                     })
                     .then(result => {
@@ -34,7 +34,7 @@ const insertUser = async (user) => {
                     })
                     .catch(error => {
 
-                        return reject(error)
+                        return reject("Error hashing password: " + error)
                         
                     })
             })
@@ -72,6 +72,8 @@ const retrieveUser = async (userToRetrieve, connection) => {
                         const user = { id: results[0].id, username: results[0].username }
 
                         console.log("Retrieved user.")
+
+                        console.log({ user })
 
                         return resolve(user)
 
@@ -111,11 +113,11 @@ const hashPassword = async (password) => {
     })
 }
 
-const insertUserSQL = async (connection, user_id, username, hashedPassword, salt) => {
+const insertUserSQL = async (connection, username, hashedPassword, salt) => {
 
     return new Promise((resolve, reject) => {
 
-        user = { user_id, username, salt }
+        user = { username, salt }
 
         user.password = hashedPassword
     
