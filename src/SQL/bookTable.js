@@ -15,13 +15,14 @@ const insertBook = async (book, connection) => {
 
         })
 
-        const { title, authors, description, mainCategory, thumnail, volume_id } = book.info
+        const { title, authors, description, mainCategory, thumbnail } = book.info
+        
 
         connection.query(
             'INSERT INTO Book \
             (title, authors,  description, mainCategory, thumbnail, volume_id, shelf_id) \
             VALUES (?, ?, ?, ?, ?, ?, ?)', 
-        [title, authors, description, mainCategory, thumnail, book.volumeId, book.shelfId], 
+        [title, authors, description, mainCategory, thumbnail, book.volume_id, book.shelf_id], 
         (error, results) => {
             
             if (error) return reject(console.error(error))
@@ -54,7 +55,7 @@ const retrieveBooksOfShelves = async (shelves, connection) => {
 
         if(shelves.length === 1) {
 
-            connection.query('SELECT * FROM Book WHERE shelf_id = ?', shelves[0], (error, results) => {
+            connection.query('SELECT * FROM Book WHERE shelf_id = ?', [shelves[0].id], (error, results) => {
                 
                 if (error) return reject(`Error loading books for shelf ${shelves[0].name}: ${error}`)
 
