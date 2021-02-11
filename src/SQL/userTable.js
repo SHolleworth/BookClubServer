@@ -81,23 +81,28 @@ var retrieveUser = function (userToRetrieve, connection) { return __awaiter(void
                 if (!connection)
                     connection = getConnection();
                 if (connection) {
-                    connection.query('SELECT * FROM User WHERE username = ?', [userToRetrieve.username], function (error, results) {
-                        if (error)
-                            return reject("Error retrieving user " + userToRetrieve.username + " data: " + error);
-                        if (results.length > 1)
-                            return reject("Error, more than 1 user with name " + userToRetrieve.username + " found.");
-                        var hash = results[0].password;
-                        bcrypt.compare(userToRetrieve.password, hash, function (err, result) {
-                            if (err)
-                                return reject("Error comparing passwords: " + err);
-                            if (result) {
-                                var user = { id: results[0].id, username: results[0].username };
-                                console.log("Retrieved user.");
-                                console.log({ user: user });
-                                return resolve(user);
-                            }
+                    try {
+                        connection.query('SELECT * FROM User WHERE username = ?', [userToRetrieve.username], function (error, results) {
+                            if (error)
+                                return reject("Error retrieving user " + userToRetrieve.username + " data: " + error);
+                            if (results.length > 1)
+                                return reject("Error, more than 1 user with name " + userToRetrieve.username + " found.");
+                            var hash = results[0].password;
+                            bcrypt.compare(userToRetrieve.password, hash, function (err, result) {
+                                if (err)
+                                    return reject("Error comparing passwords: " + err);
+                                if (result) {
+                                    var user = { id: results[0].id, username: results[0].username };
+                                    console.log("Retrieved user.");
+                                    console.log({ user: user });
+                                    return resolve(user);
+                                }
+                            });
                         });
-                    });
+                    }
+                    catch (error) {
+                        console.error(error);
+                    }
                 }
                 else {
                     return reject("Error during user insertion, not connected to Database.");
@@ -125,11 +130,16 @@ var insertUserSQL = function (connection, username, hashedPassword, salt) { retu
         return [2 /*return*/, new Promise(function (resolve, reject) {
                 var user = { username: username, salt: salt, password: "" };
                 user.password = hashedPassword;
-                connection.query("INSERT INTO User SET ?", user, function (error) {
-                    if (error)
-                        return reject("Error inserting user into database: " + error);
-                    return resolve("User " + username + " added to database.");
-                });
+                try {
+                    connection.query("INSERT INTO User SET ?", user, function (error) {
+                        if (error)
+                            return reject("Error inserting user into database: " + error);
+                        return resolve("User " + username + " added to database.");
+                    });
+                }
+                catch (error) {
+                    console.error(error);
+                }
             })];
     });
 }); };

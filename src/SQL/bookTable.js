@@ -58,41 +58,53 @@ var insertBook = function (book, pool) { return __awaiter(void 0, void 0, void 0
                     if (err)
                         return reject(err);
                     connection.beginTransaction(function (error) {
-                        if (error)
+                        if (error) {
+                            connection.release();
                             return reject(error);
-                        connection.query('SELECT * FROM Book WHERE id = ?', [book.id], function (error, results) {
-                            if (error) {
-                                return connection.rollback(function () {
-                                    return reject(error);
-                                });
-                            }
-                            if (results.length)
-                                return reject("Error, book with id " + book.id + " already in database.");
-                            connection.query('INSERT INTO Book (volumeId, shelfId) VALUES (?, ?)', [book.volumeId, book.shelfId], function (error, results) {
+                        }
+                        try {
+                            connection.query('SELECT * FROM Book WHERE id = ?', [book.id], function (error, results) {
                                 if (error) {
                                     return connection.rollback(function () {
-                                        return reject("Error adding book: " + error);
+                                        connection.release();
+                                        return reject(error);
                                     });
                                 }
-                                var bookInfo = __assign(__assign({}, book.info), { authors: book.info.authors.toString(), bookId: results.insertId });
-                                connection.query('INSERT INTO BookInfo SET ?', bookInfo, function (error, results) {
+                                if (results.length)
+                                    return reject("Error, book with id " + book.id + " already in database.");
+                                connection.query('INSERT INTO Book (volumeId, shelfId) VALUES (?, ?)', [book.volumeId, book.shelfId], function (error, results) {
                                     if (error) {
                                         return connection.rollback(function () {
-                                            return reject("Error adding book info: " + error);
+                                            connection.release();
+                                            return reject("Error adding book: " + error);
                                         });
                                     }
-                                    console.log("Inserted book info.");
-                                    connection.commit(function (error) {
+                                    var bookInfo = __assign(__assign({}, book.info), { authors: book.info.authors.toString(), bookId: results.insertId });
+                                    connection.query('INSERT INTO BookInfo SET ?', bookInfo, function (error, results) {
                                         if (error) {
                                             return connection.rollback(function () {
-                                                return reject("Error commiting book insertion: " + error);
+                                                connection.release();
+                                                return reject("Error adding book info: " + error);
                                             });
                                         }
-                                        return resolve(results);
+                                        console.log("Inserted book info.");
+                                        connection.commit(function (error) {
+                                            if (error) {
+                                                return connection.rollback(function () {
+                                                    connection.release();
+                                                    return reject("Error commiting book insertion: " + error);
+                                                });
+                                            }
+                                            connection.release();
+                                            return resolve(results);
+                                        });
                                     });
                                 });
                             });
-                        });
+                        }
+                        catch (error) {
+                            console.error(error.code);
+                        }
                     });
                 });
             })];
@@ -110,39 +122,49 @@ var retrieveBooksOfShelves = function (shelves, connection) { return __awaiter(v
                     return resolve(books);
                 }
                 if (shelves.length === 1) {
-                    connection.query('SELECT * FROM Book WHERE shelfId = ?', [shelves[0].id], function (error, results) {
-                        if (error)
-                            return reject("Error loading books for shelf " + shelves[0].name + ": " + error);
-                        console.log("Retrieved books for single shelf.");
-                        books = results;
-                        retrieveAndAppendBookInfo(books, connection)
-                            .then(function (books) {
-                            return resolve(books);
-                        })
-                            .catch(function (error) {
-                            return reject(error);
+                    try {
+                        connection.query('SELECT * FROM Book WHERE shelfId = ?', [shelves[0].id], function (error, results) {
+                            if (error)
+                                return reject("Error loading books for shelf " + shelves[0].name + ": " + error);
+                            console.log("Retrieved books for single shelf.");
+                            books = results;
+                            retrieveAndAppendBookInfo(books, connection)
+                                .then(function (books) {
+                                return resolve(books);
+                            })
+                                .catch(function (error) {
+                                return reject(error);
+                            });
                         });
-                    });
+                    }
+                    catch (error) {
+                        console.error(error);
+                    }
                 }
                 var shelfIds = shelves.map(function (shelf) { return shelf.id; });
-                connection.query('SELECT * FROM Book WHERE shelfId IN (?)', [shelfIds], function (error, results) {
-                    if (error)
-                        return reject("Error loading books: " + error + ".");
-                    console.log("Retrieved books.");
-                    books = results;
-                    if (books.length) {
-                        retrieveAndAppendBookInfo(books, connection)
-                            .then(function (booksWithInfo) {
-                            return resolve(booksWithInfo);
-                        })
-                            .catch(function (error) {
-                            return reject(error);
-                        });
-                    }
-                    else {
-                        return resolve(books);
-                    }
-                });
+                try {
+                    connection.query('SELECT * FROM Book WHERE shelfId IN (?)', [shelfIds], function (error, results) {
+                        if (error)
+                            return reject("Error loading books: " + error + ".");
+                        console.log("Retrieved books.");
+                        books = results;
+                        if (books.length) {
+                            retrieveAndAppendBookInfo(books, connection)
+                                .then(function (booksWithInfo) {
+                                return resolve(booksWithInfo);
+                            })
+                                .catch(function (error) {
+                                return reject(error);
+                            });
+                        }
+                        else {
+                            return resolve(books);
+                        }
+                    });
+                }
+                catch (error) {
+                    console.error(error);
+                }
             })];
     });
 }); };
@@ -153,21 +175,26 @@ var retrieveAndAppendBookInfo = function (books, connection) { return __awaiter(
                 if (!connection)
                     connection = getConnection();
                 var bookIds = books.map(function (book) { return book.id; });
-                connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds], function (error, results) {
-                    if (error)
-                        return reject("Error loading book data: " + error);
-                    console.log("Retrieved book info.");
-                    return resolve(books.map(function (book, i) {
-                        book.info = results[i];
-                        if (results[i].authors.includes(',')) {
-                            book.info.authors = results[i].authors.split(',');
-                        }
-                        else {
-                            book.info.authors = [results[i].authors];
-                        }
-                        return book;
-                    }));
-                });
+                try {
+                    connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds], function (error, results) {
+                        if (error)
+                            return reject("Error loading book data: " + error);
+                        console.log("Retrieved book info.");
+                        return resolve(books.map(function (book, i) {
+                            book.info = results[i];
+                            if (results[i].authors.includes(',')) {
+                                book.info.authors = results[i].authors.split(',');
+                            }
+                            else {
+                                book.info.authors = [results[i].authors];
+                            }
+                            return book;
+                        }));
+                    });
+                }
+                catch (error) {
+                    console.error(error);
+                }
             })];
     });
 }); };

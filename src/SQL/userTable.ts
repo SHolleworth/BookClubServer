@@ -65,32 +65,41 @@ const retrieveUser = async (userToRetrieve: UserLoginObject, connection: Pool): 
 
         if(connection) {
 
-            connection.query('SELECT * FROM User WHERE username = ?', [userToRetrieve.username], (error, results) => {
+            try {
+
+                connection.query('SELECT * FROM User WHERE username = ?', [userToRetrieve.username], (error, results) => {
                 
-                if (error) return reject(`Error retrieving user ${userToRetrieve.username} data: ` + error)
-
-                if (results.length > 1) return reject(`Error, more than 1 user with name ${userToRetrieve.username} found.`)
-
-                const hash = results[0].password
-
-                bcrypt.compare(userToRetrieve.password, hash, (err: Error, result: boolean) => {
-                    
-                    if (err) return reject(`Error comparing passwords: ` + err)
-
-                    if(result) {
-
-                        const user = { id: results[0].id, username: results[0].username }
-
-                        console.log("Retrieved user.")
-
-                        console.log({ user })
-
-                        return resolve(user)
-
-                    }
-
+                    if (error) return reject(`Error retrieving user ${userToRetrieve.username} data: ` + error)
+    
+                    if (results.length > 1) return reject(`Error, more than 1 user with name ${userToRetrieve.username} found.`)
+    
+                    const hash = results[0].password
+    
+                    bcrypt.compare(userToRetrieve.password, hash, (err: Error, result: boolean) => {
+                        
+                        if (err) return reject(`Error comparing passwords: ` + err)
+    
+                        if(result) {
+    
+                            const user = { id: results[0].id, username: results[0].username }
+    
+                            console.log("Retrieved user.")
+    
+                            console.log({ user })
+    
+                            return resolve(user)
+    
+                        }
+    
+                    })
                 })
-            })
+
+            }
+            catch (error) {
+
+                console.error(error)
+
+            }
         }
         else {
 
@@ -131,13 +140,22 @@ const insertUserSQL = async (connection: Pool, username: string, hashedPassword:
 
         user.password = hashedPassword
     
-        connection.query("INSERT INTO User SET ?", user, (error) => {
-    
-            if (error) return reject("Error inserting user into database: " + error)
+        try {
 
-            return resolve(`User ${username} added to database.`)
-        
-        })
+            connection.query("INSERT INTO User SET ?", user, (error) => {
+    
+                if (error) return reject("Error inserting user into database: " + error)
+    
+                return resolve(`User ${username} added to database.`)
+            
+            })
+
+        }
+        catch (error) {
+
+            console.error(error)
+            
+        }
 
     })
 

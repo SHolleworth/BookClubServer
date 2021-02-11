@@ -16,75 +16,100 @@ const insertBook = async (book: BookObject, pool: Pool) => {
             
             connection.beginTransaction((error) => {
 
-                if (error) return reject(error)
+                if (error) {
+
+                    connection.release()
+
+                    return reject(error)
+
+                } 
 
 
+                try {
 
-                connection.query('SELECT * FROM Book WHERE id = ?', [book.id], (error, results) => {
+                    connection.query('SELECT * FROM Book WHERE id = ?', [book.id], (error, results) => {
                 
-                    if (error) {
-
-                        return connection.rollback(() => {
-                            
-                            return reject(error)
-
-                        }) 
-
-                    }
-    
-                    if(results.length) return reject(`Error, book with id ${book.id} already in database.`)
-
-
-    
-                    connection.query('INSERT INTO Book (volumeId, shelfId) VALUES (?, ?)', [book.volumeId, book.shelfId], (error, results) => {
-                    
                         if (error) {
-
+    
                             return connection.rollback(() => {
+
+                                connection.release()
                                 
-                                return reject("Error adding book: " + error)
+                                return reject(error)
     
                             }) 
     
-                        } 
-            
-                        const bookInfo = { ...book.info, authors: book.info.authors.toString(), bookId: results.insertId } 
-
+                        }
+        
+                        if(results.length) return reject(`Error, book with id ${book.id} already in database.`)
+    
+    
+        
+                        connection.query('INSERT INTO Book (volumeId, shelfId) VALUES (?, ?)', [book.volumeId, book.shelfId], (error, results) => {
                         
-            
-                        connection.query('INSERT INTO BookInfo SET ?', bookInfo, (error, results) => {
-                            
                             if (error) {
-
+    
                                 return connection.rollback(() => {
+
+                                    connection.release()
                                     
-                                    return reject("Error adding book info: " + error)
+                                    return reject("Error adding book: " + error)
         
                                 }) 
         
-                            }  
+                            } 
                 
-                            console.log("Inserted book info.")
+                            const bookInfo = { ...book.info, authors: book.info.authors.toString(), bookId: results.insertId } 
+    
+                            
                 
-                            connection.commit((error) => {
+                            connection.query('INSERT INTO BookInfo SET ?', bookInfo, (error, results) => {
                                 
                                 if (error) {
-
+    
                                     return connection.rollback(() => {
+
+                                        connection.release()
                                         
-                                        return reject("Error commiting book insertion: " + error)
+                                        return reject("Error adding book info: " + error)
             
                                     }) 
             
-                                }
-                                
-                                return resolve(results)
+                                }  
+                    
+                                console.log("Inserted book info.")
+                    
+                                connection.commit((error) => {
+                                    
+                                    if (error) {
+    
+                                        return connection.rollback(() => {
 
+                                            connection.release()
+                                            
+                                            return reject("Error commiting book insertion: " + error)
+                
+                                        }) 
+                
+                                    }
+
+                                    connection.release()
+                                    
+                                    return resolve(results)
+    
+                                })
                             })
                         })
                     })
-                })
+                }
+                catch(error) {
+
+                    console.error(error.code)
+
+                }
+
             })
+                
         })
     })
 }
@@ -107,58 +132,77 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[], connection: Pool) 
 
         if(shelves.length === 1) {
 
-            connection.query('SELECT * FROM Book WHERE shelfId = ?', [shelves[0].id], (error, results) => {
+            try {
+
+                connection.query('SELECT * FROM Book WHERE shelfId = ?', [shelves[0].id], (error, results) => {
                 
-                if (error) return reject(`Error loading books for shelf ${shelves[0].name}: ${error}`)
-
-                console.log("Retrieved books for single shelf.")
-
-                books = results
-
-                retrieveAndAppendBookInfo(books, connection)
-                .then(books => {
-
-                    return resolve(books)
+                    if (error) return reject(`Error loading books for shelf ${shelves[0].name}: ${error}`)
     
-                })
-                .catch(error => {
-                    
-                    return reject(error)
+                    console.log("Retrieved books for single shelf.")
     
+                    books = results
+    
+                    retrieveAndAppendBookInfo(books, connection)
+                    .then(books => {
+    
+                        return resolve(books)
+        
+                    })
+                    .catch(error => {
+                        
+                        return reject(error)
+        
+                    })
                 })
-            })
+
+            }
+            catch (error) {
+
+                console.error(error)
+
+            }            
 
         }
 
         const shelfIds: number[] = shelves.map(shelf => shelf.id)
 
-        connection.query('SELECT * FROM Book WHERE shelfId IN (?)', [shelfIds], (error, results) => {
-            
-            if (error) return reject(`Error loading books: ${error}.`)
+        try {
 
-            console.log("Retrieved books.")
+            connection.query('SELECT * FROM Book WHERE shelfId IN (?)', [shelfIds], (error, results) => {
+                
+                if (error) return reject(`Error loading books: ${error}.`)
 
-            books = results
+                console.log("Retrieved books.")
 
-            if(books.length) {
-                retrieveAndAppendBookInfo(books, connection)
-                .then(booksWithInfo => {
+                books = results
 
-                    return resolve(booksWithInfo)
+                if(books.length) {
+                    retrieveAndAppendBookInfo(books, connection)
+                    .then(booksWithInfo => {
 
-                })
-                .catch(error => {
-                    
-                    return reject(error)
+                        return resolve(booksWithInfo)
 
-                })
-            }
-            else {
+                    })
+                    .catch(error => {
+                        
+                        return reject(error)
 
-                return resolve(books)
+                    })
+                }
+                else {
 
-            }
-        })
+                    return resolve(books)
+
+                }
+            })
+
+        }
+        catch (error) {
+
+            console.error(error)
+
+        }
+
 
     })
 
@@ -173,33 +217,42 @@ const retrieveAndAppendBookInfo = async (books: BookObject[], connection: Pool) 
 
         const bookIds: (number | null)[] = books.map(book => book.id)
 
-        connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds], (error, results) => {
-            
-            if (error) return reject("Error loading book data: " + error)
+        try {
+    
+            connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds], (error, results) => {
+                
+                if (error) return reject("Error loading book data: " + error)
 
-            console.log("Retrieved book info.")
+                console.log("Retrieved book info.")
 
-            return resolve(books.map((book, i) => 
-                {
+                return resolve(books.map((book, i) => 
+                    {
 
-                    book.info = results[i]
+                        book.info = results[i]
 
-                    if(results[i].authors.includes(',')) {
+                        if(results[i].authors.includes(',')) {
 
-                        book.info.authors = results[i].authors.split(',')
+                            book.info.authors = results[i].authors.split(',')
 
-                    }
-                    else {
+                        }
+                        else {
 
-                        book.info.authors = [results[i].authors]
-                    }
+                            book.info.authors = [results[i].authors]
+                        }
 
 
-                    return book
+                        return book
 
-                }))
+                    }))
 
-        })
+            })
+
+        }
+        catch (error) {
+
+            console.error(error)
+
+        }
 
     })
     

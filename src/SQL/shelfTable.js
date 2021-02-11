@@ -44,18 +44,23 @@ var insertShelf = function (shelf, connection) { return __awaiter(void 0, void 0
                 //If no connection supplied, request one from the pool
                 if (!connection)
                     connection = getConnection();
-                connection.query('SELECT * FROM Shelf WHERE id = ?', [shelf.id], function (error, results) {
-                    if (error)
-                        return reject(error);
-                    if (results.length)
-                        return reject("Error, shelf with id " + shelf.id + " already in database.");
-                });
-                connection.query('INSERT INTO Shelf (name, userId) VALUES (?, ?)', [shelf.name, shelf.userId], function (error, results) {
-                    if (error)
-                        return reject(console.error(error));
-                    console.log("Inserted shelf: " + shelf.name);
-                    return resolve(results);
-                });
+                try {
+                    connection.query('SELECT * FROM Shelf WHERE id = ?', [shelf.id], function (error, results) {
+                        if (error)
+                            return reject(error);
+                        if (results.length)
+                            return reject("Error, shelf with id " + shelf.id + " already in database.");
+                        connection.query('INSERT INTO Shelf (name, userId) VALUES (?, ?)', [shelf.name, shelf.userId], function (error, results) {
+                            if (error)
+                                return reject(console.error(error));
+                            console.log("Inserted shelf: " + shelf.name);
+                            return resolve(results);
+                        });
+                    });
+                }
+                catch (error) {
+                    console.error(error);
+                }
             })];
     });
 }); };
@@ -65,13 +70,18 @@ var retrieveShelvesOfUser = function (user, connection) { return __awaiter(void 
                 //If no connection supplied, request one from the pool
                 if (!connection)
                     connection = getConnection();
-                connection.query('SELECT * FROM Shelf WHERE userId = ?', [user.id], function (error, results) {
-                    if (error)
-                        return reject("Error loading shelves: " + error);
-                    console.log("Retrieved shelves." + results);
-                    console.log({ results: results });
-                    return resolve(results);
-                });
+                try {
+                    connection.query('SELECT * FROM Shelf WHERE userId = ?', [user.id], function (error, results) {
+                        if (error)
+                            return reject("Error loading shelves: " + error);
+                        console.log("Retrieved shelves." + results);
+                        console.log({ results: results });
+                        return resolve(results);
+                    });
+                }
+                catch (error) {
+                    console.error(error);
+                }
             })];
     });
 }); };

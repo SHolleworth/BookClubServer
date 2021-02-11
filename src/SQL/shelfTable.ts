@@ -11,24 +11,33 @@ const insertShelf = async (shelf: ShelfObject, connection: Pool) => {
         //If no connection supplied, request one from the pool
         if(!connection) connection = getConnection()
 
-        connection.query('SELECT * FROM Shelf WHERE id = ?', [shelf.id], (error, results) => {
+        try {
+
+            connection.query('SELECT * FROM Shelf WHERE id = ?', [shelf.id], (error, results) => {
             
-            if (error) return reject(error)
+                if (error) return reject(error)
+    
+                if(results.length) return reject(`Error, shelf with id ${shelf.id} already in database.`)
 
-            if(results.length) return reject(`Error, shelf with id ${shelf.id} already in database.`)
 
-        })
+                connection.query('INSERT INTO Shelf (name, userId) VALUES (?, ?)', 
+                [shelf.name, shelf.userId], (error, results) => {
+                    
+                    if (error) return reject(console.error(error))
+        
+                    console.log("Inserted shelf: " + shelf.name)
+        
+                    return resolve(results)
+    
+                })
+    
+            })
+        }
+        catch (error) {
 
-        connection.query('INSERT INTO Shelf (name, userId) VALUES (?, ?)', 
-            [shelf.name, shelf.userId], (error, results) => {
-            
-            if (error) return reject(console.error(error))
+            console.error(error)
 
-            console.log("Inserted shelf: " + shelf.name)
-
-            return resolve(results)
-
-        })
+        }
 
     })
 
@@ -41,17 +50,26 @@ const retrieveShelvesOfUser = async (user: UserObject, connection: Pool): Promis
         //If no connection supplied, request one from the pool
         if(!connection) connection = getConnection()
 
-        connection.query('SELECT * FROM Shelf WHERE userId = ?', [user.id], (error, results) => {
+        try {
+
+            connection.query('SELECT * FROM Shelf WHERE userId = ?', [user.id], (error, results) => {
             
-            if (error) return reject("Error loading shelves: " + error)
+                if (error) return reject("Error loading shelves: " + error)
+    
+                console.log("Retrieved shelves." + results)
+    
+                console.log({ results })
+    
+                return resolve(results)
+    
+            })
 
-            console.log("Retrieved shelves." + results)
+        }
+        catch (error) {
 
-            console.log({ results })
+            console.error(error)
 
-            return resolve(results)
-
-        })
+        }
 
     })
 
