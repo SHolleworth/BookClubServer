@@ -10,6 +10,12 @@ const insertBook = async (book: BookObject, pool: Pool) => {
         //Request pool from connection if none supplied
         if (!pool) pool = getConnection()
 
+        if(!book.info.authors) {
+
+            book.info.authors = [""]
+
+        }
+
         pool.getConnection((err, connection) => {
 
             if (err) return reject(err)

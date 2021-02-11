@@ -54,6 +54,9 @@ var insertBook = function (book, pool) { return __awaiter(void 0, void 0, void 0
                 //Request pool from connection if none supplied
                 if (!pool)
                     pool = getConnection();
+                if (!book.info.authors) {
+                    book.info.authors = [""];
+                }
                 pool.getConnection(function (err, connection) {
                     if (err)
                         return reject(err);
