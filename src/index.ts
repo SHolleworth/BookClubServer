@@ -15,7 +15,7 @@ const { insertUser, retrieveUser } = require('./SQL/userTable')
 
 import { BookObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject } from '../../types' 
 
-fs.readFile('../../apiKey.txt', 'utf8', (err: Error, data: string) => {
+fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
     if (err) throw err
 
@@ -61,7 +61,7 @@ fs.readFile('../../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 socket.emit('register_new_user_response', response)
 
             })
-            .catch(error => {
+            .catch((error: string) => {
 
                 socket.emit('register_new_user_error', error)
 
@@ -72,7 +72,7 @@ fs.readFile('../../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //User login request
         socket.on('login_as_user', async (user: UserLoginObject) =>{
 
-            let userData: UserLoginDataObject = { user: null, shelves: null, books: null }
+            let userData: UserLoginDataObject = { user: { id: null, username: null }, shelves: [], books: [] }
 
             const connection = getConnection()
 
@@ -149,7 +149,7 @@ fs.readFile('../../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //Retrieve books of user
         socket.on('retrieve_books', async (user) => {
 
-            const data: {shelves: ShelfObject[], books: BookObject[]} = { shelves: null, books: null }
+            const data: {shelves: ShelfObject[], books: BookObject[]} = { shelves: [], books: [] }
 
             retrieveShelvesOfUser(user)
             .then((shelves: ShelfObject[]) => {
