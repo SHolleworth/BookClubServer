@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getPool = exports.configureConnectionPool = void 0;
 var mysql = require('mysql');
 var fs = require('fs');
 var password = '';
 var pool = null;
-var configureConnectionPool = function () {
+exports.configureConnectionPool = function () {
     fs.readFile('../DBPassword.txt', function (err, data) {
         if (err)
             throw err;
@@ -19,7 +20,7 @@ var configureConnectionPool = function () {
         console.log("Connected to database.");
     });
 };
-var getPool = function () {
+exports.getPool = function () {
     return pool;
 };
-module.exports = { configureConnectionPool: configureConnectionPool, getPool: getPool };
+module.exports = { configureConnectionPool: exports.configureConnectionPool, getPool: exports.getPool };

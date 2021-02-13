@@ -1,11 +1,13 @@
 import { BookObject, ShelfObject } from "../../../types"
-import { Pool } from "mysql"
+import {  Pool, PoolConnection } from "mysql"
+import ConnectionWrapper, { Connection } from '../database'
+import { configureConnectionPool } from "./connection"
 
 const { getPool } = require('./connection')
 
 const insertBook = async (book: BookObject, pool: Pool) => {
     
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         
         //Request pool from connection if none supplied
         if (!pool) pool = getPool()
@@ -16,108 +18,51 @@ const insertBook = async (book: BookObject, pool: Pool) => {
 
         }
 
-        pool.getConnection((err, connection) => {
+        const connection: Connection = new (ConnectionWrapper as any)()
 
-            if (err) return reject(err)
+        try {
+
+            await connection.getPoolConnection()
+
+            await connection.beginTransaction()
+
+            const existingBooks = await connection.query('SELECT * FROM Book WHERE id = ?', [book.id]) 
             
-            connection.beginTransaction((error) => {
+            if(existingBooks.length) return reject(`Error, book with id ${book.id} already in database.`)
 
-                if (error) {
+            const insertBookResult = await connection.query('INSERT INTO Book (volumeId, shelfId) VALUES (?, ?)', [book.volumeId, book.shelfId])
 
-                    connection.release()
+            const bookInfo = { ...book.info, authors: book.info.authors.toString(), bookId: insertBookResult.insertId }
 
-                    return reject(error)
+            await connection.query('INSERT INTO BookInfo SET ?', [bookInfo])
 
-                } 
+            await connection.commit()
 
+            connection.release()
 
-                try {
+            return resolve("Added book and info to database.")
 
-                    connection.query('SELECT * FROM Book WHERE id = ?', [book.id], (error, results) => {
-                
-                        if (error) {
-    
-                            return connection.rollback(() => {
+        }
+        catch (error) {
 
-                                connection.release()
-                                
-                                return reject(error)
-    
-                            }) 
-    
-                        }
-        
-                        if(results.length) return reject(`Error, book with id ${book.id} already in database.`)
-    
-    
-        
-                        connection.query('INSERT INTO Book (volumeId, shelfId) VALUES (?, ?)', [book.volumeId, book.shelfId], (error, results) => {
-                        
-                            if (error) {
-    
-                                return connection.rollback(() => {
+            try {
 
-                                    connection.release()
-                                    
-                                    return reject("Error adding book: " + error)
-        
-                                }) 
-        
-                            } 
-                
-                            const bookInfo = { ...book.info, authors: book.info.authors.toString(), bookId: results.insertId } 
-    
-                            
-                
-                            connection.query('INSERT INTO BookInfo SET ?', bookInfo, (error, results) => {
-                                
-                                if (error) {
-    
-                                    return connection.rollback(() => {
+                await connection.rollback()
 
-                                        connection.release()
-                                        
-                                        return reject("Error adding book info: " + error)
-            
-                                    }) 
-            
-                                }  
-                    
-                                console.log("Inserted book info.")
-                    
-                                connection.commit((error) => {
-                                    
-                                    if (error) {
-    
-                                        return connection.rollback(() => {
+                connection.release()
 
-                                            connection.release()
-                                            
-                                            return reject("Error commiting book insertion: " + error)
-                
-                                        }) 
-                
-                                    }
+                return reject(error)
 
-                                    connection.release()
-                                    
-                                    return resolve(results)
-    
-                                })
-                            })
-                        })
-                    })
-                }
-                catch(error) {
+            }
+            catch (error) {
 
-                    console.error(error.code)
+                return reject(error)
 
-                }
+            }
+        }
 
-            })
-                
-        })
     })
+
 }
 
 const retrieveBooksOfShelves = async (shelves: ShelfObject[], connection: Pool) => {

@@ -46,71 +46,70 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+var database_1 = __importDefault(require("../database"));
 var getPool = require('./connection').getPool;
 var insertBook = function (book, pool) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        return [2 /*return*/, new Promise(function (resolve, reject) {
-                //Request pool from connection if none supplied
-                if (!pool)
-                    pool = getPool();
-                if (!book.info.authors) {
-                    book.info.authors = [""];
-                }
-                pool.getConnection(function (err, connection) {
-                    if (err)
-                        return reject(err);
-                    connection.beginTransaction(function (error) {
-                        if (error) {
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var connection, existingBooks, insertBookResult, bookInfo, error_1, error_2;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            //Request pool from connection if none supplied
+                            if (!pool)
+                                pool = getPool();
+                            if (!book.info.authors) {
+                                book.info.authors = [""];
+                            }
+                            connection = new database_1.default();
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 8, , 13]);
+                            return [4 /*yield*/, connection.getPoolConnection()];
+                        case 2:
+                            _a.sent();
+                            return [4 /*yield*/, connection.beginTransaction()];
+                        case 3:
+                            _a.sent();
+                            return [4 /*yield*/, connection.query('SELECT * FROM Book WHERE id = ?', [book.id])];
+                        case 4:
+                            existingBooks = _a.sent();
+                            if (existingBooks.length)
+                                return [2 /*return*/, reject("Error, book with id " + book.id + " already in database.")];
+                            return [4 /*yield*/, connection.query('INSERT INTO Book (volumeId, shelfId) VALUES (?, ?)', [book.volumeId, book.shelfId])];
+                        case 5:
+                            insertBookResult = _a.sent();
+                            bookInfo = __assign(__assign({}, book.info), { authors: book.info.authors.toString(), bookId: insertBookResult.insertId });
+                            return [4 /*yield*/, connection.query('INSERT INTO BookInfo SET ?', [bookInfo])];
+                        case 6:
+                            _a.sent();
+                            return [4 /*yield*/, connection.commit()];
+                        case 7:
+                            _a.sent();
                             connection.release();
-                            return reject(error);
-                        }
-                        try {
-                            connection.query('SELECT * FROM Book WHERE id = ?', [book.id], function (error, results) {
-                                if (error) {
-                                    return connection.rollback(function () {
-                                        connection.release();
-                                        return reject(error);
-                                    });
-                                }
-                                if (results.length)
-                                    return reject("Error, book with id " + book.id + " already in database.");
-                                connection.query('INSERT INTO Book (volumeId, shelfId) VALUES (?, ?)', [book.volumeId, book.shelfId], function (error, results) {
-                                    if (error) {
-                                        return connection.rollback(function () {
-                                            connection.release();
-                                            return reject("Error adding book: " + error);
-                                        });
-                                    }
-                                    var bookInfo = __assign(__assign({}, book.info), { authors: book.info.authors.toString(), bookId: results.insertId });
-                                    connection.query('INSERT INTO BookInfo SET ?', bookInfo, function (error, results) {
-                                        if (error) {
-                                            return connection.rollback(function () {
-                                                connection.release();
-                                                return reject("Error adding book info: " + error);
-                                            });
-                                        }
-                                        console.log("Inserted book info.");
-                                        connection.commit(function (error) {
-                                            if (error) {
-                                                return connection.rollback(function () {
-                                                    connection.release();
-                                                    return reject("Error commiting book insertion: " + error);
-                                                });
-                                            }
-                                            connection.release();
-                                            return resolve(results);
-                                        });
-                                    });
-                                });
-                            });
-                        }
-                        catch (error) {
-                            console.error(error.code);
-                        }
-                    });
+                            return [2 /*return*/, resolve("Added book and info to database.")];
+                        case 8:
+                            error_1 = _a.sent();
+                            _a.label = 9;
+                        case 9:
+                            _a.trys.push([9, 11, , 12]);
+                            return [4 /*yield*/, connection.rollback()];
+                        case 10:
+                            _a.sent();
+                            connection.release();
+                            return [2 /*return*/, reject(error_1)];
+                        case 11:
+                            error_2 = _a.sent();
+                            return [2 /*return*/, reject(error_2)];
+                        case 12: return [3 /*break*/, 13];
+                        case 13: return [2 /*return*/];
+                    }
                 });
-            })];
+            }); })];
     });
 }); };
 var retrieveBooksOfShelves = function (shelves, connection) { return __awaiter(void 0, void 0, void 0, function () {

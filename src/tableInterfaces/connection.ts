@@ -7,7 +7,7 @@ let password = ''
 
 let pool: Pool | null = null
 
-const configureConnectionPool = () => {
+export const configureConnectionPool = () => {
     fs.readFile('../DBPassword.txt', (err: Error , data: string)  => {
 
         if (err) throw err
@@ -26,8 +26,10 @@ const configureConnectionPool = () => {
     })
 }
 
-const getPool = () => {
+export const getPool = () => {
+
     return pool
+    
 }
 
 module.exports = { configureConnectionPool, getPool }
