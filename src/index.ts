@@ -13,7 +13,8 @@ const { configureConnectionPool, getConnection }= require('./SQL/connection')
 const { insertShelf, retrieveShelvesOfUser } = require('./SQL/shelfTable')
 const { insertUser, retrieveUser } = require('./SQL/userTable')
 
-import { BookObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject } from '../../types' 
+import { BookObject, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject } from '../../types' 
+import { insertClub, retrieveClubs } from "./SQL/clubTables"
 
 fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
@@ -172,7 +173,43 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 
             })
 
+        })
+
+        //Post new club
+        socket.on('post_new_club', async (clubData: ClubPostObject) => {
+
+            insertClub(clubData, null)
+            .then((results: string) => {
+                
+                socket.emit('post_new_club_response', results)
+
             })
+            .catch((error: string) => {
+                
+                socket.emit('post_new_club_error', error)
+
+            })
+
+        })
+
+        //Retrieve clubs of user
+        socket.on('retrieve_clubs', async (user: UserObject) => {
+
+            console.log("Retrieving clubs for user: " + user.id)
+            
+            retrieveClubs(user, null)
+            .then((clubs: ClubObject[]) => {
+                
+                socket.emit('retrieve_clubs_response', clubs)
+
+            })
+            .catch((error: string) => {
+                
+                socket.emit('retrieve_clubs_error', error)
+
+            })
+            
+        })
 
     })
 })

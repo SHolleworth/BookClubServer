@@ -45,3 +45,22 @@ SELECT * FROM Shelf WHERE user_id = ?, [user.id]
 SELECT * FROM Book WHERE shelf_id IN (?), [shelves]
 
 INSERT INTO Shelf VALUES (?)
+
+CREATE TABLE Club (\
+	id INT NOT NULL AUTO_INCREMENT,\
+	name VARCHAR(255) NOT NULL,\
+	PRIMARY KEY(id)
+);
+
+CREATE TABLE ClubMember (\
+	id INT NOT NULL AUTO_INCREMENT,\
+	userId INT NOT NULL,\
+	clubId INT NOT NULL,\
+	admin BOOLEAN NOT NULL,\
+	FOREIGN KEY (userId) REFERENCES User (id),\
+	FOREIGN KEY (clubId) REFERENCES Club (id),\
+	PRIMARY KEY (id)\
+);
+
+INSERT INTO Club (name) VALUES (?);
+	

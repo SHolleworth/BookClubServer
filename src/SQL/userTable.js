@@ -36,6 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.convertToUserObject = void 0;
 var getConnection = require('./connection').getConnection;
 var bcrypt = require('bcrypt');
 var SALT_ROUNDS = 10;
@@ -143,4 +144,7 @@ var insertUserSQL = function (connection, username, hashedPassword, salt) { retu
             })];
     });
 }); };
+exports.convertToUserObject = function (userData) {
+    return { id: userData.id, username: userData.username };
+};
 module.exports = { insertUser: insertUser, retrieveUser: retrieveUser };

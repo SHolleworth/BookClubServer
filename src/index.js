@@ -47,6 +47,7 @@ var _a = require('./SQL/bookTable'), insertBook = _a.insertBook, retrieveBooksOf
 var _b = require('./SQL/connection'), configureConnectionPool = _b.configureConnectionPool, getConnection = _b.getConnection;
 var _c = require('./SQL/shelfTable'), insertShelf = _c.insertShelf, retrieveShelvesOfUser = _c.retrieveShelvesOfUser;
 var _d = require('./SQL/userTable'), insertUser = _d.insertUser, retrieveUser = _d.retrieveUser;
+var clubTables_1 = require("./SQL/clubTables");
 fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
     if (err)
         throw err;
@@ -167,6 +168,33 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                 })
                     .catch(function (error) {
                     socket.emit('retrieve_books_error', error);
+                });
+                return [2 /*return*/];
+            });
+        }); });
+        //Post new club
+        socket.on('post_new_club', function (clubData) { return __awaiter(void 0, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                clubTables_1.insertClub(clubData, null)
+                    .then(function (results) {
+                    socket.emit('post_new_club_response', results);
+                })
+                    .catch(function (error) {
+                    socket.emit('post_new_club_error', error);
+                });
+                return [2 /*return*/];
+            });
+        }); });
+        //Retrieve clubs of user
+        socket.on('retrieve_clubs', function (user) { return __awaiter(void 0, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                console.log("Retrieving clubs for user: " + user.id);
+                clubTables_1.retrieveClubs(user, null)
+                    .then(function (clubs) {
+                    socket.emit('retrieve_clubs_response', clubs);
+                })
+                    .catch(function (error) {
+                    socket.emit('retrieve_clubs_error', error);
                 });
                 return [2 /*return*/];
             });

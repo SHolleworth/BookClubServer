@@ -1,7 +1,7 @@
 const { getConnection } = require('./connection')
 const bcrypt = require('bcrypt')
 
-import { UserLoginObject, UserObject, UserRegisterObject } from '../../../types'
+import { UserData, UserLoginObject, UserObject, UserRegisterObject } from '../../../types'
 import { Pool } from '../../node_modules/@types/mysql'
 
 const SALT_ROUNDS = 10
@@ -158,6 +158,12 @@ const insertUserSQL = async (connection: Pool, username: string, hashedPassword:
         }
 
     })
+
+}
+
+export const convertToUserObject = (userData: UserData) => {
+    
+    return { id: userData.id, username: userData.username }
 
 }
 
