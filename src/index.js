@@ -91,11 +91,11 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                     case 1:
                         _d.trys.push([1, 5, , 6]);
                         _a = userData;
-                        return [4 /*yield*/, retrieveUser(user, connection)];
+                        return [4 /*yield*/, retrieveUser(user)];
                     case 2:
                         _a.user = _d.sent();
                         _b = userData;
-                        return [4 /*yield*/, retrieveShelvesOfUser(userData.user, connection)];
+                        return [4 /*yield*/, retrieveShelvesOfUser(userData.user)];
                     case 3:
                         _b.shelves = _d.sent();
                         _c = userData;
@@ -189,7 +189,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         socket.on('retrieve_clubs', function (user) { return __awaiter(void 0, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 console.log("Retrieving clubs for user: " + user.id);
-                clubTables_1.retrieveClubs(user, null)
+                clubTables_1.retrieveClubs(user)
                     .then(function (clubs) {
                     socket.emit('retrieve_clubs_response', clubs);
                 })

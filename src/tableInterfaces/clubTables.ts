@@ -1,6 +1,3 @@
-const { getPool } = require('./connection')
-
-import { Pool } from "mysql";
 import { ClubData, ClubObject, ClubPostObject, MemberData, MemberObject, UserData, UserObject } from "../../../types";
 import ConnectionWrapper, { Connection } from "../database";
 
@@ -45,7 +42,7 @@ export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
 
 }
 
-export const retrieveClubs = (user: UserObject, pool: Pool | null): Promise<ClubObject[]> => {
+export const retrieveClubs = (user: UserObject): Promise<ClubObject[]> => {
 
     console.log("Inside retrieving clubs.")
     

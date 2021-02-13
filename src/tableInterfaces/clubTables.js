@@ -58,7 +58,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.retrieveClubs = exports.insertClub = void 0;
-var getPool = require('./connection').getPool;
 var database_1 = __importDefault(require("../database"));
 exports.insertClub = function (clubData) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
@@ -103,85 +102,59 @@ exports.insertClub = function (clubData) { return __awaiter(void 0, void 0, void
             }); })];
     });
 }); };
-exports.retrieveClubs = function (user, pool) {
+exports.retrieveClubs = function (user) {
     console.log("Inside retrieving clubs.");
-    return new Promise(function (resolve, reject) {
-        if (!pool)
-            pool = getPool();
-        var clubDataBelongingToUser = [];
-        var memberDataBelongingToClubs = [];
-        var userDataBelongingToMembers = [];
-        if (pool) {
-            console.log("Connected to database.");
-            try {
-                pool.getConnection(function (error, connection) {
-                    if (error)
-                        return reject(error);
-                    console.log("Acquired connection from pool");
-                    connection.beginTransaction(function (error) {
-                        if (error)
-                            return reject(error);
-                        console.log("Beginning transaction.");
-                        connection.query('SELECT * FROM ClubMember WHERE userId = ?', [user.id], function (error, results) {
-                            if (error) {
-                                connection.rollback();
-                                connection.release();
-                                return reject(error);
-                            }
-                            var clubIdsOfUser = results.map(function (memberData) { return memberData.clubId; });
-                            connection.query('SELECT * FROM Club WHERE id IN (?)', [clubIdsOfUser], function (error, results) {
-                                if (error) {
-                                    connection.rollback();
-                                    connection.release();
-                                    return reject(error);
-                                }
-                                console.log("Retrieved club data for user.");
-                                clubDataBelongingToUser = results;
-                                if (clubDataBelongingToUser.length < 1) {
-                                    return resolve([]);
-                                }
-                                var clubIds = clubDataBelongingToUser.map(function (clubData) { return clubData.id; });
-                                connection.query('SELECT * FROM ClubMember WHERE clubId IN (?)', [clubIds], function (error, results) {
-                                    if (error) {
-                                        connection.rollback();
-                                        connection.release();
-                                        return reject(error);
-                                    }
-                                    console.log("Retrieved member data.");
-                                    memberDataBelongingToClubs = results;
-                                    var memberIds = memberDataBelongingToClubs.map(function (memberData) { return memberData.userId; });
-                                    connection.query('SELECT * FROM User WHERE id IN (?)', [memberIds], function (error, results) {
-                                        if (error) {
-                                            connection.rollback();
-                                            connection.release();
-                                            return reject(error);
-                                        }
-                                        userDataBelongingToMembers = results;
-                                        var clubs = formatClubObjects(clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers);
-                                        connection.commit(function (error) {
-                                            if (error) {
-                                                connection.rollback();
-                                                connection.release();
-                                                return reject(error);
-                                            }
-                                            connection.release();
-                                            return resolve(clubs);
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
+    return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+        var clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, connection, memberDataOfUser, clubIdsOfUser, clubIds, memberIds, clubs, error_2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    clubDataBelongingToUser = [];
+                    memberDataBelongingToClubs = [];
+                    userDataBelongingToMembers = [];
+                    connection = new database_1.default();
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 9, , 10]);
+                    return [4 /*yield*/, connection.getPoolConnection()];
+                case 2:
+                    _a.sent();
+                    return [4 /*yield*/, connection.beginTransaction()];
+                case 3:
+                    _a.sent();
+                    return [4 /*yield*/, connection.query('SELECT * FROM ClubMember WHERE userId = ?', [user.id])];
+                case 4:
+                    memberDataOfUser = _a.sent();
+                    clubIdsOfUser = memberDataOfUser.map(function (memberData) { return memberData.clubId; });
+                    return [4 /*yield*/, connection.query('SELECT * FROM Club WHERE id IN (?)', [clubIdsOfUser])];
+                case 5:
+                    clubDataBelongingToUser = _a.sent();
+                    if (clubDataBelongingToUser.length < 1) {
+                        return [2 /*return*/, resolve([])];
+                    }
+                    clubIds = clubDataBelongingToUser.map(function (clubData) { return clubData.id; });
+                    return [4 /*yield*/, connection.query('SELECT * FROM ClubMember WHERE clubId IN (?)', [clubIds])];
+                case 6:
+                    memberDataBelongingToClubs = _a.sent();
+                    memberIds = memberDataBelongingToClubs.map(function (memberData) { return memberData.userId; });
+                    return [4 /*yield*/, connection.query('SELECT * FROM User WHERE id IN (?)', [memberIds])];
+                case 7:
+                    userDataBelongingToMembers = _a.sent();
+                    clubs = formatClubObjects(clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers);
+                    return [4 /*yield*/, connection.commit()];
+                case 8:
+                    _a.sent();
+                    connection.release();
+                    return [2 /*return*/, resolve(clubs)];
+                case 9:
+                    error_2 = _a.sent();
+                    connection.rollback();
+                    connection.release();
+                    return [2 /*return*/, reject(error_2)];
+                case 10: return [2 /*return*/];
             }
-            catch (error) {
-                return reject("SQL error during club insertion: " + error);
-            }
-        }
-        else {
-            return reject("Error inserting club, not connected to database.");
-        }
-    });
+        });
+    }); });
 };
 var formatClubObjects = function (clubDataSet, memberDataSet, userDataSet) {
     return clubDataSet.map(function (clubData) {

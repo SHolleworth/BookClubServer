@@ -78,9 +78,9 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
             const connection = getPool()
 
             try {
-                userData.user = await retrieveUser(user, connection)
+                userData.user = await retrieveUser(user)
 
-                userData.shelves = await retrieveShelvesOfUser(userData.user, connection)
+                userData.shelves = await retrieveShelvesOfUser(userData.user)
 
                 userData.books = await retrieveBooksOfShelves(userData.shelves)
                 
@@ -197,7 +197,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
             console.log("Retrieving clubs for user: " + user.id)
             
-            retrieveClubs(user, null)
+            retrieveClubs(user)
             .then((clubs: ClubObject[]) => {
                 
                 socket.emit('retrieve_clubs_response', clubs)

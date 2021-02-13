@@ -35,80 +35,97 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertToUserObject = void 0;
-var getPool = require('./connection').getPool;
 var bcrypt = require('bcrypt');
+var database_1 = __importDefault(require("../database"));
 var SALT_ROUNDS = 10;
-var insertUser = function (user, connection) { return __awaiter(void 0, void 0, void 0, function () {
+var insertUser = function (user) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        return [2 /*return*/, new Promise(function (resolve, reject) {
-                if (!connection)
-                    connection = getPool();
-                if (connection) {
-                    var username_1 = user.username, password_1 = user.password;
-                    try {
-                        connection.query("SELECT * FROM User WHERE username = ?", [username_1], function (error, result, fields) {
-                            if (error)
-                                return reject("Error searching for existing user: " + error);
-                            if (result.length)
-                                return resolve("That username already exists.");
-                            hashPassword(password_1)
-                                .then(function (_a) {
-                                var hash = _a.hash, salt = _a.salt;
-                                return insertUserSQL(connection, username_1, hash, salt);
-                            })
-                                .then(function (result) {
-                                return resolve(result);
-                            })
-                                .catch(function (error) {
-                                return reject("Error hashing password: " + error);
-                            });
-                        });
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var connection, username, password, user_1, _a, hash, salt, message, error_1;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            connection = new database_1.default();
+                            username = user.username, password = user.password;
+                            _b.label = 1;
+                        case 1:
+                            _b.trys.push([1, 6, , 7]);
+                            return [4 /*yield*/, connection.getPoolConnection()];
+                        case 2:
+                            _b.sent();
+                            return [4 /*yield*/, connection.query("SELECT * FROM User WHERE username = ?", [username])];
+                        case 3:
+                            user_1 = _b.sent();
+                            if (user_1.length)
+                                return [2 /*return*/, resolve("That username already exists.")];
+                            return [4 /*yield*/, hashPassword(password)];
+                        case 4:
+                            _a = _b.sent(), hash = _a.hash, salt = _a.salt;
+                            return [4 /*yield*/, insertUserSQL(connection, username, hash, salt)];
+                        case 5:
+                            message = _b.sent();
+                            connection.release();
+                            return [2 /*return*/, resolve(message)];
+                        case 6:
+                            error_1 = _b.sent();
+                            connection.release();
+                            return [2 /*return*/, reject(error_1)];
+                        case 7: return [2 /*return*/];
                     }
-                    catch (error) {
-                        console.log("SQL query error " + error.code + ".");
-                    }
-                }
-                else {
-                    return reject("Error during user insertion, not connected to Database.");
-                }
-            })];
+                });
+            }); })];
     });
 }); };
-var retrieveUser = function (userToRetrieve, connection) { return __awaiter(void 0, void 0, void 0, function () {
+var retrieveUser = function (userToRetrieve) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        return [2 /*return*/, new Promise(function (resolve, reject) {
-                if (!connection)
-                    connection = getPool();
-                if (connection) {
-                    try {
-                        connection.query('SELECT * FROM User WHERE username = ?', [userToRetrieve.username], function (error, results) {
-                            if (error)
-                                return reject("Error retrieving user " + userToRetrieve.username + " data: " + error);
-                            if (results.length > 1)
-                                return reject("Error, more than 1 user with name " + userToRetrieve.username + " found.");
-                            var hash = results[0].password;
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var connection, existingUsers_1, hash, error_2;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            connection = new database_1.default();
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 4, , 5]);
+                            return [4 /*yield*/, connection.getPoolConnection()];
+                        case 2:
+                            _a.sent();
+                            return [4 /*yield*/, connection.query('SELECT * FROM User WHERE username = ?', [userToRetrieve.username])];
+                        case 3:
+                            existingUsers_1 = _a.sent();
+                            if (existingUsers_1.length > 1) {
+                                connection.release();
+                                return [2 /*return*/, reject("Error, more than 1 user with name " + userToRetrieve.username + " found.")];
+                            }
+                            hash = existingUsers_1[0].password;
                             bcrypt.compare(userToRetrieve.password, hash, function (err, result) {
-                                if (err)
+                                if (err) {
+                                    connection.release();
                                     return reject("Error comparing passwords: " + err);
+                                }
                                 if (result) {
-                                    var user = { id: results[0].id, username: results[0].username };
-                                    console.log("Retrieved user.");
-                                    console.log({ user: user });
+                                    var user = { id: existingUsers_1[0].id, username: existingUsers_1[0].username };
                                     return resolve(user);
                                 }
+                                else {
+                                    connection.release();
+                                    return resolve("Incorrect Password");
+                                }
                             });
-                        });
+                            return [3 /*break*/, 5];
+                        case 4:
+                            error_2 = _a.sent();
+                            connection.release();
+                            return [2 /*return*/, reject(error_2)];
+                        case 5: return [2 /*return*/];
                     }
-                    catch (error) {
-                        console.error(error);
-                    }
-                }
-                else {
-                    return reject("Error during user insertion, not connected to Database.");
-                }
-            })];
+                });
+            }); })];
     });
 }); };
 var hashPassword = function (password) { return __awaiter(void 0, void 0, void 0, function () {
@@ -128,20 +145,29 @@ var hashPassword = function (password) { return __awaiter(void 0, void 0, void 0
 }); };
 var insertUserSQL = function (connection, username, hashedPassword, salt) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        return [2 /*return*/, new Promise(function (resolve, reject) {
-                var user = { username: username, salt: salt, password: "" };
-                user.password = hashedPassword;
-                try {
-                    connection.query("INSERT INTO User SET ?", user, function (error) {
-                        if (error)
-                            return reject("Error inserting user into database: " + error);
-                        return resolve("User " + username + " added to database.");
-                    });
-                }
-                catch (error) {
-                    console.error(error);
-                }
-            })];
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var user, error_3;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            user = { username: username, salt: salt, password: "" };
+                            user.password = hashedPassword;
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 3, , 4]);
+                            return [4 /*yield*/, connection.query("INSERT INTO User SET ?", [user])];
+                        case 2:
+                            _a.sent();
+                            connection.release();
+                            return [2 /*return*/, resolve("User " + username + " added to database.")];
+                        case 3:
+                            error_3 = _a.sent();
+                            connection.release();
+                            return [2 /*return*/, reject(error_3)];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            }); })];
     });
 }); };
 exports.convertToUserObject = function (userData) {

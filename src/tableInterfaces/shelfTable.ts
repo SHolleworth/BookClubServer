@@ -1,41 +1,34 @@
-const { getPool } = require('./connection')
 import { ShelfObject, UserObject } from '../../../types'
-import { Pool } from 'mysql' 
+import ConnectionWrapper from '../database'
 
-const insertShelf = async (shelf: ShelfObject, connection: Pool) => {
+const insertShelf = async (shelf: ShelfObject) => {
     
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         
         console.log("Inserting shelf " + shelf.name)
 
-        //If no connection supplied, request one from the pool
-        if(!connection) connection = getPool()
+        const connection = new (ConnectionWrapper as any)()
 
         try {
 
-            connection.query('SELECT * FROM Shelf WHERE id = ?', [shelf.id], (error, results) => {
+            await connection.getPoolConnection()
+
+            const existingShelves = await connection.query('SELECT * FROM Shelf WHERE id = ?', [shelf.id])
+
+            if(existingShelves.length) return reject(`Error, shelf with id ${shelf.id} already in database.`)
+
+            await connection.query('INSERT INTO Shelf (name, userId) VALUES (?, ?)', [shelf.name, shelf.userId])
+
+            connection.release()
             
-                if (error) return reject(error)
-    
-                if(results.length) return reject(`Error, shelf with id ${shelf.id} already in database.`)
+            return resolve("Successfully added shelf to database.")
 
-
-                connection.query('INSERT INTO Shelf (name, userId) VALUES (?, ?)', 
-                [shelf.name, shelf.userId], (error, results) => {
-                    
-                    if (error) return reject(console.error(error))
-        
-                    console.log("Inserted shelf: " + shelf.name)
-        
-                    return resolve(results)
-    
-                })
-    
-            })
         }
         catch (error) {
 
-            console.error(error)
+            connection.release()
+
+            return reject(error)
 
         }
 
@@ -43,31 +36,29 @@ const insertShelf = async (shelf: ShelfObject, connection: Pool) => {
 
 }
 
-const retrieveShelvesOfUser = async (user: UserObject, connection: Pool): Promise<ShelfObject[]> => {
+const retrieveShelvesOfUser = async (user: UserObject): Promise<ShelfObject[]> => {
     
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
 
-        //If no connection supplied, request one from the pool
-        if(!connection) connection = getPool()
+        const connection = new (ConnectionWrapper as any)()
 
         try {
 
-            connection.query('SELECT * FROM Shelf WHERE userId = ?', [user.id], (error, results) => {
-            
-                if (error) return reject("Error loading shelves: " + error)
-    
-                console.log("Retrieved shelves." + results)
-    
-                console.log({ results })
-    
-                return resolve(results)
-    
-            })
+            await connection.getPoolConnection()
+
+            const shelves = await connection.query('SELECT * FROM Shelf WHERE userId = ?', [user.id])
+
+            connection.release()
+
+            return resolve(shelves)
+
 
         }
         catch (error) {
 
-            console.error(error)
+            connection.release()
+
+            return reject(error)
 
         }
 
