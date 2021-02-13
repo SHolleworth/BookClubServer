@@ -2,104 +2,45 @@ const { getPool } = require('./connection')
 
 import { Pool } from "mysql";
 import { ClubData, ClubObject, ClubPostObject, MemberData, MemberObject, UserData, UserObject } from "../../../types";
-import { convertToUserObject } from "./userTable";
+import ConnectionWrapper, { Connection } from "../database";
 
-export const insertClub = async (clubData: ClubPostObject, pool: Pool | null): Promise<string> => {
+export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
     
-    return new Promise((resolve, reject) => {
-        
-        if (!pool) pool = getPool()
+    return new Promise(async (resolve, reject) => {
 
-        if(pool) {
+        const connection: Connection = new (ConnectionWrapper as any)()
 
-            try {
+        try {
 
-                console.log("Inserting new club.")
+            await connection.getPoolConnection()
 
-                pool.getConnection((error, connection) => {
-                    
-                    if (error) return reject(error)
-    
-    
-    
-                    connection.beginTransaction((error) => {
-                        
-                        if (error) return reject(error)
-    
-    
-    
-                        connection.query('INSERT INTO Club (name) VALUES (?)', [clubData.name], (error, results) => {
-                            
-                            if (error) {
-    
-                                connection.rollback()
-    
-                                connection.release()
-    
-                                return reject(error)
-    
-                            }
-    
-    
+            await connection.beginTransaction()
 
-                            const clubId = results.insertId
-    
-                            const newClubMember = { userId: clubData.userId, clubId, admin: true }
-    
-                            connection.query('INSERT INTO ClubMember SET ?', [newClubMember], (error) => {
-                                
-                                if (error) {
-    
-                                    connection.rollback()
-        
-                                    connection.release()
-        
-                                    return reject(error)
-        
-                                }
-    
-    
-    
-                                connection.commit((error) => {
-                                    
-                                    if (error) {
-    
-                                        connection.rollback()
-            
-                                        connection.release()
-            
-                                        return reject(error)
-            
-                                    }
-    
-    
-                                    connection.release()
-    
-                                    return resolve("Successfully added club to database.")
-    
-                                })
-    
-                            })
-                        })
-    
-                    })
-    
-                })
-    
-            }
-            catch (error) {
-    
-                ("SQL error during club insertion: " + error)
-    
-            }
+            const insertedClubRow = await connection.query('INSERT INTO Club (name) VALUES (?)', [clubData.name])
+
+            const clubId = insertedClubRow.insertId
+
+            const newClubMember = { userId: clubData.userId, clubId, admin: true }
+
+            await connection.query('INSERT INTO ClubMember SET ?', [newClubMember])
+
+            await connection.commit()
+
+            connection.release()
+
+            return resolve("Successfully added club to database.")
 
         }
-        else {
+        catch (error){
 
-            return reject("Error inserting club, not connected to database.")
+            await connection.rollback()
+        
+            connection.release()
+
+            return reject(error)
 
         }
-        
+       
     });
 
 }
@@ -108,160 +49,58 @@ export const retrieveClubs = (user: UserObject, pool: Pool | null): Promise<Club
 
     console.log("Inside retrieving clubs.")
     
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         
-        if (!pool) pool = getPool()
 
         let clubDataBelongingToUser: ClubData[] = []
+
         let memberDataBelongingToClubs: MemberData[] = [] 
+
         let userDataBelongingToMembers: UserData[] = []
 
-        if(pool) {
+        const connection: Connection = new (ConnectionWrapper as any)()
 
-            console.log("Connected to database.")
+        try {
 
-            try {
+            await connection.getPoolConnection()
 
-                pool.getConnection((error, connection) => {
-                    
-                    if (error) return reject(error)
-    
+            await connection.beginTransaction()
 
-                    console.log("Acquired connection from pool")
-    
-                    connection.beginTransaction((error) => {
-                        
-                        if (error) return reject(error)
-    
-                        console.log("Beginning transaction.")
+            const memberDataOfUser =  await connection.query('SELECT * FROM ClubMember WHERE userId = ?', [user.id])
 
+            const clubIdsOfUser = memberDataOfUser.map((memberData: MemberData) => memberData.clubId) 
 
+            clubDataBelongingToUser = await connection.query('SELECT * FROM Club WHERE id IN (?)', [clubIdsOfUser])
 
-                        connection.query('SELECT * FROM ClubMember WHERE userId = ?', [user.id], (error, results) => {
-                            
-                            if (error) {
+            if(clubDataBelongingToUser.length < 1) {
 
-                                connection.rollback()
+                return resolve([])
 
-                                connection.release()
-
-                                return reject(error)
-
-                            }
-
-
-
-                        
-                            const clubIdsOfUser = results.map((memberData: MemberData) => memberData.clubId) 
-
-                            connection.query('SELECT * FROM Club WHERE id IN (?)', [clubIdsOfUser], (error, results) => {
-
-                                if (error) {
-
-                                    connection.rollback()
-
-                                    connection.release()
-
-                                    return reject(error)
-
-                                }
-
-
-
-                                console.log("Retrieved club data for user.")
-
-                                clubDataBelongingToUser = results
-
-                                if(clubDataBelongingToUser.length < 1) {
-
-                                    return resolve([])
-
-                                }
-
-                                const clubIds = clubDataBelongingToUser.map((clubData: ClubData) => clubData.id)
-
-                                connection.query('SELECT * FROM ClubMember WHERE clubId IN (?)', [clubIds], (error, results) => {
-                                    
-                                    if (error) {
-
-                                        connection.rollback()
-        
-                                        connection.release()
-        
-                                        return reject(error)
-        
-                                    }
-
-                                    
-
-                                    console.log("Retrieved member data.")
-
-                                    memberDataBelongingToClubs = results
-
-                                    const memberIds = memberDataBelongingToClubs.map((memberData: MemberData) => memberData.userId)
-
-                                    connection.query('SELECT * FROM User WHERE id IN (?)', [memberIds], (error, results) => {
-                                        
-                                        if (error) {
-
-                                            connection.rollback()
-            
-                                            connection.release()
-            
-                                            return reject(error)
-            
-                                        }
-
-
-
-                                        userDataBelongingToMembers = results
-
-                                        const clubs = formatClubObjects(clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers)
-
-                                        connection.commit((error) => {
-
-                                            if (error) {
-
-                                                connection.rollback()
-                
-                                                connection.release()
-                
-                                                return reject(error)
-                
-                                            }
-                                            
-
-
-                                            connection.release()
-
-                                            return resolve(clubs)
-                                            
-                                        })
-
-                                    })
-
-                                })
-                            
-                            })
-
-                        })
-
-                    })
-    
-                })
-    
-            }
-            catch (error) {
-    
-                return reject("SQL error during club insertion: " + error)
-    
             }
 
+            const clubIds = clubDataBelongingToUser.map((clubData: ClubData) => clubData.id)
+
+            memberDataBelongingToClubs = await connection.query('SELECT * FROM ClubMember WHERE clubId IN (?)', [clubIds])
+
+            const memberIds = memberDataBelongingToClubs.map((memberData: MemberData) => memberData.userId)
+
+            userDataBelongingToMembers = await connection.query('SELECT * FROM User WHERE id IN (?)', [memberIds])
+
+            const clubs = formatClubObjects(clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers)
+
+            await connection.commit()
+
+            connection.release()
+
+            return resolve(clubs)
         }
-        else {
+        catch (error) {
 
-            return reject("Error inserting club, not connected to database.")
+            connection.rollback()
 
+            connection.release()
+
+            return reject(error)
         }
 
     });

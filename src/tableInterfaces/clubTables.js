@@ -53,59 +53,54 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.retrieveClubs = exports.insertClub = void 0;
 var getPool = require('./connection').getPool;
-exports.insertClub = function (clubData, pool) { return __awaiter(void 0, void 0, void 0, function () {
+var database_1 = __importDefault(require("../database"));
+exports.insertClub = function (clubData) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        return [2 /*return*/, new Promise(function (resolve, reject) {
-                if (!pool)
-                    pool = getPool();
-                if (pool) {
-                    try {
-                        console.log("Inserting new club.");
-                        pool.getConnection(function (error, connection) {
-                            if (error)
-                                return reject(error);
-                            connection.beginTransaction(function (error) {
-                                if (error)
-                                    return reject(error);
-                                connection.query('INSERT INTO Club (name) VALUES (?)', [clubData.name], function (error, results) {
-                                    if (error) {
-                                        connection.rollback();
-                                        connection.release();
-                                        return reject(error);
-                                    }
-                                    var clubId = results.insertId;
-                                    var newClubMember = { userId: clubData.userId, clubId: clubId, admin: true };
-                                    connection.query('INSERT INTO ClubMember SET ?', [newClubMember], function (error) {
-                                        if (error) {
-                                            connection.rollback();
-                                            connection.release();
-                                            return reject(error);
-                                        }
-                                        connection.commit(function (error) {
-                                            if (error) {
-                                                connection.rollback();
-                                                connection.release();
-                                                return reject(error);
-                                            }
-                                            connection.release();
-                                            return resolve("Successfully added club to database.");
-                                        });
-                                    });
-                                });
-                            });
-                        });
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var connection, insertedClubRow, clubId, newClubMember, error_1;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            connection = new database_1.default();
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 7, , 9]);
+                            return [4 /*yield*/, connection.getPoolConnection()];
+                        case 2:
+                            _a.sent();
+                            return [4 /*yield*/, connection.beginTransaction()];
+                        case 3:
+                            _a.sent();
+                            return [4 /*yield*/, connection.query('INSERT INTO Club (name) VALUES (?)', [clubData.name])];
+                        case 4:
+                            insertedClubRow = _a.sent();
+                            clubId = insertedClubRow.insertId;
+                            newClubMember = { userId: clubData.userId, clubId: clubId, admin: true };
+                            return [4 /*yield*/, connection.query('INSERT INTO ClubMember SET ?', [newClubMember])];
+                        case 5:
+                            _a.sent();
+                            return [4 /*yield*/, connection.commit()];
+                        case 6:
+                            _a.sent();
+                            connection.release();
+                            return [2 /*return*/, resolve("Successfully added club to database.")];
+                        case 7:
+                            error_1 = _a.sent();
+                            return [4 /*yield*/, connection.rollback()];
+                        case 8:
+                            _a.sent();
+                            connection.release();
+                            return [2 /*return*/, reject(error_1)];
+                        case 9: return [2 /*return*/];
                     }
-                    catch (error) {
-                        ("SQL error during club insertion: " + error);
-                    }
-                }
-                else {
-                    return reject("Error inserting club, not connected to database.");
-                }
-            })];
+                });
+            }); })];
     });
 }); };
 exports.retrieveClubs = function (user, pool) {

@@ -18,7 +18,7 @@ export default function (this: Connection) {
 
 
 
-    
+
     this.getPoolConnection = async () => {
 
         return new Promise((resolve, reject) => {
@@ -67,7 +67,7 @@ export default function (this: Connection) {
             }
             else {
 
-                return reject(`Error establishing database connection. SQL: ${sql}.`)
+                return reject(`Error when querying, connection wrapper not connected to database. SQL: ${sql}.`)
 
             }
             
@@ -96,7 +96,7 @@ export default function (this: Connection) {
             }
             else {
     
-                return reject("Error beginning transaction, no connection to database.")
+                return reject("Error beginning transaction, connection wrapper not connected to database.")
             }
     
         });
@@ -122,7 +122,7 @@ export default function (this: Connection) {
             }
             else {
     
-                return reject("Error beginning transaction, no connection to database.")
+                return reject("Error beginning transaction, connection wrapper not connected to database.")
 
             }
     
@@ -155,7 +155,7 @@ export default function (this: Connection) {
             }
             else {
 
-                return reject("Error rolling back transaction, no connection.")
+                return reject("Error rolling back transaction, connection wrapper not connected to database.")
             }
 
 

@@ -99,7 +99,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                     case 3:
                         _b.shelves = _d.sent();
                         _c = userData;
-                        return [4 /*yield*/, retrieveBooksOfShelves(userData.shelves, connection)];
+                        return [4 /*yield*/, retrieveBooksOfShelves(userData.shelves)];
                     case 4:
                         _c.books = _d.sent();
                         console.log("User logging on: " + userData.user.username);
@@ -175,7 +175,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         //Post new club
         socket.on('post_new_club', function (clubData) { return __awaiter(void 0, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                clubTables_1.insertClub(clubData, null)
+                clubTables_1.insertClub(clubData)
                     .then(function (results) {
                     socket.emit('post_new_club_response', results);
                 })

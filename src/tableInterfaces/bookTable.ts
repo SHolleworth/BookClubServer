@@ -1,16 +1,9 @@
 import { BookObject, ShelfObject } from "../../../types"
-import {  Pool, PoolConnection } from "mysql"
 import ConnectionWrapper, { Connection } from '../database'
-import { configureConnectionPool } from "./connection"
 
-const { getPool } = require('./connection')
-
-const insertBook = async (book: BookObject, pool: Pool) => {
+const insertBook = async (book: BookObject) => {
     
     return new Promise(async (resolve, reject) => {
-        
-        //Request pool from connection if none supplied
-        if (!pool) pool = getPool()
 
         if(!book.info.authors) {
 
@@ -56,6 +49,8 @@ const insertBook = async (book: BookObject, pool: Pool) => {
             }
             catch (error) {
 
+                connection.release()
+
                 return reject(error)
 
             }
@@ -65,12 +60,9 @@ const insertBook = async (book: BookObject, pool: Pool) => {
 
 }
 
-const retrieveBooksOfShelves = async (shelves: ShelfObject[], connection: Pool) => {
+const retrieveBooksOfShelves = async (shelves: ShelfObject[]) => {
     
-    return new Promise((resolve, reject) => {
-        
-        //Request connection from pool if none supplied
-        if (!connection) connection = getPool()
+    return new Promise(async (resolve, reject) => {
 
         let books: BookObject[] = []
 
@@ -81,127 +73,79 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[], connection: Pool) 
             return resolve(books)
         }
 
-        if(shelves.length === 1) {
-
-            try {
-
-                connection.query('SELECT * FROM Book WHERE shelfId = ?', [shelves[0].id], (error, results) => {
-                
-                    if (error) return reject(`Error loading books for shelf ${shelves[0].name}: ${error}`)
-    
-                    console.log("Retrieved books for single shelf.")
-    
-                    books = results
-    
-                    retrieveAndAppendBookInfo(books, connection)
-                    .then(books => {
-    
-                        return resolve(books)
-        
-                    })
-                    .catch(error => {
-                        
-                        return reject(error)
-        
-                    })
-                })
-
-            }
-            catch (error) {
-
-                console.error(error)
-
-            }            
-
-        }
-
-        const shelfIds: number[] = shelves.map(shelf => shelf.id)
+        const connection: Connection = new (ConnectionWrapper as any)()
 
         try {
 
-            connection.query('SELECT * FROM Book WHERE shelfId IN (?)', [shelfIds], (error, results) => {
-                
-                if (error) return reject(`Error loading books: ${error}.`)
+            await connection.getPoolConnection()
 
-                console.log("Retrieved books.")
+            let books: BookObject[] = []
 
-                books = results
+            const shelfIds: number[] = shelves.map(shelf => shelf.id)
 
-                if(books.length) {
-                    retrieveAndAppendBookInfo(books, connection)
-                    .then(booksWithInfo => {
+            books = await connection.query('SELECT * FROM Book WHERE shelfId IN (?)', [shelfIds])     
 
-                        return resolve(booksWithInfo)
+            if(books.length) {
 
-                    })
-                    .catch(error => {
-                        
-                        return reject(error)
+                const booksWithInfo = await retrieveAndAppendBookInfo(books, connection)
 
-                    })
-                }
-                else {
+                return resolve(booksWithInfo)
+            }
+            else {
 
-                    return resolve(books)
+                return resolve(books)
 
-                }
-            })
+            }
 
         }
         catch (error) {
 
-            console.error(error)
+            connection.release()
+
+            return reject(error)
 
         }
-
 
     })
 
 }
 
-const retrieveAndAppendBookInfo = async (books: BookObject[], connection: Pool) => {
+const retrieveAndAppendBookInfo = async (books: BookObject[], connection: Connection) => {
 
-    return new Promise((resolve, reject) => {
-        
-        //Request connection from pool if none supplied
-        if (!connection) connection = getPool()
+    return new Promise(async (resolve, reject) => {
 
         const bookIds: (number | null)[] = books.map(book => book.id)
 
         try {
-    
-            connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds], (error, results) => {
-                
-                if (error) return reject("Error loading book data: " + error)
 
-                console.log("Retrieved book info.")
+            const bookInfo = await connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds])
 
-                return resolve(books.map((book, i) => 
-                    {
+            console.log("Retrieved book info.")
 
-                        book.info = results[i]
+            return resolve(books.map((book, i) => 
+                {
 
-                        if(results[i].authors.includes(',')) {
+                    book.info = bookInfo[i]
 
-                            book.info.authors = results[i].authors.split(',')
+                    if(bookInfo[i].authors.includes(',')) {
 
-                        }
-                        else {
+                        book.info.authors = bookInfo[i].authors.split(',')
 
-                            book.info.authors = [results[i].authors]
-                        }
+                    }
+                    else {
+
+                        book.info.authors = [bookInfo[i].authors]
+                    }
 
 
-                        return book
+                    return book
 
-                    }))
-
-            })
+                }))
 
         }
         catch (error) {
 
-            console.error(error)
+            return reject(error)
 
         }
 

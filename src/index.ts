@@ -82,7 +82,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
                 userData.shelves = await retrieveShelvesOfUser(userData.user, connection)
 
-                userData.books = await retrieveBooksOfShelves(userData.shelves, connection)
+                userData.books = await retrieveBooksOfShelves(userData.shelves)
                 
                 console.log("User logging on: " + userData.user.username)
 
@@ -178,7 +178,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //Post new club
         socket.on('post_new_club', async (clubData: ClubPostObject) => {
 
-            insertClub(clubData, null)
+            insertClub(clubData)
             .then((results: string) => {
                 
                 socket.emit('post_new_club_response', results)

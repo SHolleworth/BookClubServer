@@ -51,17 +51,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var database_1 = __importDefault(require("../database"));
-var getPool = require('./connection').getPool;
-var insertBook = function (book, pool) { return __awaiter(void 0, void 0, void 0, function () {
+var insertBook = function (book) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
                 var connection, existingBooks, insertBookResult, bookInfo, error_1, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            //Request pool from connection if none supplied
-                            if (!pool)
-                                pool = getPool();
                             if (!book.info.authors) {
                                 book.info.authors = [""];
                             }
@@ -104,6 +100,7 @@ var insertBook = function (book, pool) { return __awaiter(void 0, void 0, void 0
                             return [2 /*return*/, reject(error_1)];
                         case 11:
                             error_2 = _a.sent();
+                            connection.release();
                             return [2 /*return*/, reject(error_2)];
                         case 12: return [3 /*break*/, 13];
                         case 13: return [2 /*return*/];
@@ -112,92 +109,79 @@ var insertBook = function (book, pool) { return __awaiter(void 0, void 0, void 0
             }); })];
     });
 }); };
-var retrieveBooksOfShelves = function (shelves, connection) { return __awaiter(void 0, void 0, void 0, function () {
+var retrieveBooksOfShelves = function (shelves) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        return [2 /*return*/, new Promise(function (resolve, reject) {
-                //Request connection from pool if none supplied
-                if (!connection)
-                    connection = getPool();
-                var books = [];
-                if (!shelves.length) {
-                    console.log("No books to retrieve.");
-                    return resolve(books);
-                }
-                if (shelves.length === 1) {
-                    try {
-                        connection.query('SELECT * FROM Book WHERE shelfId = ?', [shelves[0].id], function (error, results) {
-                            if (error)
-                                return reject("Error loading books for shelf " + shelves[0].name + ": " + error);
-                            console.log("Retrieved books for single shelf.");
-                            books = results;
-                            retrieveAndAppendBookInfo(books, connection)
-                                .then(function (books) {
-                                return resolve(books);
-                            })
-                                .catch(function (error) {
-                                return reject(error);
-                            });
-                        });
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var books, connection, books_1, shelfIds, booksWithInfo, error_3;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            books = [];
+                            if (!shelves.length) {
+                                console.log("No books to retrieve.");
+                                return [2 /*return*/, resolve(books)];
+                            }
+                            connection = new database_1.default();
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 7, , 8]);
+                            return [4 /*yield*/, connection.getPoolConnection()];
+                        case 2:
+                            _a.sent();
+                            books_1 = [];
+                            shelfIds = shelves.map(function (shelf) { return shelf.id; });
+                            return [4 /*yield*/, connection.query('SELECT * FROM Book WHERE shelfId IN (?)', [shelfIds])];
+                        case 3:
+                            books_1 = _a.sent();
+                            if (!books_1.length) return [3 /*break*/, 5];
+                            return [4 /*yield*/, retrieveAndAppendBookInfo(books_1, connection)];
+                        case 4:
+                            booksWithInfo = _a.sent();
+                            return [2 /*return*/, resolve(booksWithInfo)];
+                        case 5: return [2 /*return*/, resolve(books_1)];
+                        case 6: return [3 /*break*/, 8];
+                        case 7:
+                            error_3 = _a.sent();
+                            connection.release();
+                            return [2 /*return*/, reject(error_3)];
+                        case 8: return [2 /*return*/];
                     }
-                    catch (error) {
-                        console.error(error);
-                    }
-                }
-                var shelfIds = shelves.map(function (shelf) { return shelf.id; });
-                try {
-                    connection.query('SELECT * FROM Book WHERE shelfId IN (?)', [shelfIds], function (error, results) {
-                        if (error)
-                            return reject("Error loading books: " + error + ".");
-                        console.log("Retrieved books.");
-                        books = results;
-                        if (books.length) {
-                            retrieveAndAppendBookInfo(books, connection)
-                                .then(function (booksWithInfo) {
-                                return resolve(booksWithInfo);
-                            })
-                                .catch(function (error) {
-                                return reject(error);
-                            });
-                        }
-                        else {
-                            return resolve(books);
-                        }
-                    });
-                }
-                catch (error) {
-                    console.error(error);
-                }
-            })];
+                });
+            }); })];
     });
 }); };
 var retrieveAndAppendBookInfo = function (books, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        return [2 /*return*/, new Promise(function (resolve, reject) {
-                //Request connection from pool if none supplied
-                if (!connection)
-                    connection = getPool();
-                var bookIds = books.map(function (book) { return book.id; });
-                try {
-                    connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds], function (error, results) {
-                        if (error)
-                            return reject("Error loading book data: " + error);
-                        console.log("Retrieved book info.");
-                        return resolve(books.map(function (book, i) {
-                            book.info = results[i];
-                            if (results[i].authors.includes(',')) {
-                                book.info.authors = results[i].authors.split(',');
-                            }
-                            else {
-                                book.info.authors = [results[i].authors];
-                            }
-                            return book;
-                        }));
-                    });
-                }
-                catch (error) {
-                    console.error(error);
-                }
-            })];
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var bookIds, bookInfo_1, error_4;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            bookIds = books.map(function (book) { return book.id; });
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 3, , 4]);
+                            return [4 /*yield*/, connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds])];
+                        case 2:
+                            bookInfo_1 = _a.sent();
+                            console.log("Retrieved book info.");
+                            return [2 /*return*/, resolve(books.map(function (book, i) {
+                                    book.info = bookInfo_1[i];
+                                    if (bookInfo_1[i].authors.includes(',')) {
+                                        book.info.authors = bookInfo_1[i].authors.split(',');
+                                    }
+                                    else {
+                                        book.info.authors = [bookInfo_1[i].authors];
+                                    }
+                                    return book;
+                                }))];
+                        case 3:
+                            error_4 = _a.sent();
+                            return [2 /*return*/, reject(error_4)];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            }); })];
     });
 }); };
 module.exports = { insertBook: insertBook, retrieveBooksOfShelves: retrieveBooksOfShelves };

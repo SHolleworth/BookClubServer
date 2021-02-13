@@ -71,7 +71,7 @@ function default_1() {
                         });
                     }
                     else {
-                        return reject("Error establishing database connection. SQL: " + sql + ".");
+                        return reject("Error when querying, connection wrapper not connected to database. SQL: " + sql + ".");
                     }
                 })];
         });
@@ -88,7 +88,7 @@ function default_1() {
                         });
                     }
                     else {
-                        return reject("Error beginning transaction, no connection to database.");
+                        return reject("Error beginning transaction, connection wrapper not connected to database.");
                     }
                 })];
         });
@@ -105,7 +105,7 @@ function default_1() {
                         });
                     }
                     else {
-                        return reject("Error beginning transaction, no connection to database.");
+                        return reject("Error beginning transaction, connection wrapper not connected to database.");
                     }
                 })];
         });
@@ -124,7 +124,7 @@ function default_1() {
                         });
                     }
                     else {
-                        return reject("Error rolling back transaction, no connection.");
+                        return reject("Error rolling back transaction, connection wrapper not connected to database.");
                     }
                 })];
         });
