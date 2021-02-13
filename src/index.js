@@ -43,11 +43,11 @@ var port = 3000;
 var io = require('socket.io')(server);
 var fs = require('fs');
 var searchGoogleBooksByTitle = require('./requestHandler').searchGoogleBooksByTitle;
-var _a = require('./SQL/bookTable'), insertBook = _a.insertBook, retrieveBooksOfShelves = _a.retrieveBooksOfShelves;
-var _b = require('./SQL/connection'), configureConnectionPool = _b.configureConnectionPool, getConnection = _b.getConnection;
-var _c = require('./SQL/shelfTable'), insertShelf = _c.insertShelf, retrieveShelvesOfUser = _c.retrieveShelvesOfUser;
-var _d = require('./SQL/userTable'), insertUser = _d.insertUser, retrieveUser = _d.retrieveUser;
-var clubTables_1 = require("./SQL/clubTables");
+var _a = require('./tableInterfaces/bookTable'), insertBook = _a.insertBook, retrieveBooksOfShelves = _a.retrieveBooksOfShelves;
+var _b = require('./tableInterfaces/connection'), configureConnectionPool = _b.configureConnectionPool, getPool = _b.getPool;
+var _c = require('./tableInterfaces/shelfTable'), insertShelf = _c.insertShelf, retrieveShelvesOfUser = _c.retrieveShelvesOfUser;
+var _d = require('./tableInterfaces/userTable'), insertUser = _d.insertUser, retrieveUser = _d.retrieveUser;
+var clubTables_1 = require("./tableInterfaces/clubTables");
 fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
     if (err)
         throw err;
@@ -86,7 +86,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                 switch (_d.label) {
                     case 0:
                         userData = { user: { id: null, username: null }, shelves: [], books: [] };
-                        connection = getConnection();
+                        connection = getPool();
                         _d.label = 1;
                     case 1:
                         _d.trys.push([1, 5, , 6]);

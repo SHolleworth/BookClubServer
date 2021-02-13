@@ -8,13 +8,13 @@ const io = require('socket.io')(server)
 const fs = require('fs')
 
 const { searchGoogleBooksByTitle } = require('./requestHandler')
-const { insertBook, retrieveBooksOfShelves } = require('./SQL/bookTable')
-const { configureConnectionPool, getConnection }= require('./SQL/connection')
-const { insertShelf, retrieveShelvesOfUser } = require('./SQL/shelfTable')
-const { insertUser, retrieveUser } = require('./SQL/userTable')
+const { insertBook, retrieveBooksOfShelves } = require('./tableInterfaces/bookTable')
+const { configureConnectionPool, getPool }= require('./tableInterfaces/connection')
+const { insertShelf, retrieveShelvesOfUser } = require('./tableInterfaces/shelfTable')
+const { insertUser, retrieveUser } = require('./tableInterfaces/userTable')
 
 import { BookObject, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject } from '../../types' 
-import { insertClub, retrieveClubs } from "./SQL/clubTables"
+import { insertClub, retrieveClubs } from "./tableInterfaces/clubTables"
 
 fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
@@ -75,7 +75,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
             let userData: UserLoginDataObject = { user: { id: null, username: null }, shelves: [], books: [] }
 
-            const connection = getConnection()
+            const connection = getPool()
 
             try {
                 userData.user = await retrieveUser(user, connection)

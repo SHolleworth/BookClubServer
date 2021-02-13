@@ -1,4 +1,4 @@
-const { getConnection } = require('./connection')
+const { getPool } = require('./connection')
 
 import { Pool } from "mysql";
 import { ClubData, ClubObject, ClubPostObject, MemberData, MemberObject, UserData, UserObject } from "../../../types";
@@ -8,7 +8,7 @@ export const insertClub = async (clubData: ClubPostObject, pool: Pool | null): P
     
     return new Promise((resolve, reject) => {
         
-        if (!pool) pool = getConnection()
+        if (!pool) pool = getPool()
 
         if(pool) {
 
@@ -110,7 +110,7 @@ export const retrieveClubs = (user: UserObject, pool: Pool | null): Promise<Club
     
     return new Promise((resolve, reject) => {
         
-        if (!pool) pool = getConnection()
+        if (!pool) pool = getPool()
 
         let clubDataBelongingToUser: ClubData[] = []
         let memberDataBelongingToClubs: MemberData[] = [] 

@@ -36,14 +36,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var getConnection = require('./connection').getConnection;
+var getPool = require('./connection').getPool;
 var insertShelf = function (shelf, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) {
                 console.log("Inserting shelf " + shelf.name);
                 //If no connection supplied, request one from the pool
                 if (!connection)
-                    connection = getConnection();
+                    connection = getPool();
                 try {
                     connection.query('SELECT * FROM Shelf WHERE id = ?', [shelf.id], function (error, results) {
                         if (error)
@@ -69,7 +69,7 @@ var retrieveShelvesOfUser = function (user, connection) { return __awaiter(void 
         return [2 /*return*/, new Promise(function (resolve, reject) {
                 //If no connection supplied, request one from the pool
                 if (!connection)
-                    connection = getConnection();
+                    connection = getPool();
                 try {
                     connection.query('SELECT * FROM Shelf WHERE userId = ?', [user.id], function (error, results) {
                         if (error)

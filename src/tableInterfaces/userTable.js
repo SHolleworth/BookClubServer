@@ -37,14 +37,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertToUserObject = void 0;
-var getConnection = require('./connection').getConnection;
+var getPool = require('./connection').getPool;
 var bcrypt = require('bcrypt');
 var SALT_ROUNDS = 10;
 var insertUser = function (user, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) {
                 if (!connection)
-                    connection = getConnection();
+                    connection = getPool();
                 if (connection) {
                     var username_1 = user.username, password_1 = user.password;
                     try {
@@ -80,7 +80,7 @@ var retrieveUser = function (userToRetrieve, connection) { return __awaiter(void
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) {
                 if (!connection)
-                    connection = getConnection();
+                    connection = getPool();
                 if (connection) {
                     try {
                         connection.query('SELECT * FROM User WHERE username = ?', [userToRetrieve.username], function (error, results) {

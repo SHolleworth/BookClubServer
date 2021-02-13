@@ -1,8 +1,8 @@
-const { getConnection } = require('./connection')
+const { getPool } = require('./connection')
 const bcrypt = require('bcrypt')
 
 import { UserData, UserLoginObject, UserObject, UserRegisterObject } from '../../../types'
-import { Pool } from '../../node_modules/@types/mysql'
+import { Pool } from 'mysql'
 
 const SALT_ROUNDS = 10
 
@@ -10,7 +10,7 @@ const insertUser = async (user: UserRegisterObject, connection: Pool) => {
 
     return new Promise((resolve, reject) => {
 
-        if(!connection) connection = getConnection()
+        if(!connection) connection = getPool()
 
         if (connection) {
             
@@ -61,7 +61,7 @@ const retrieveUser = async (userToRetrieve: UserLoginObject, connection: Pool): 
     
     return new Promise((resolve, reject) => {
         
-        if (!connection) connection = getConnection()
+        if (!connection) connection = getPool()
 
         if(connection) {
 

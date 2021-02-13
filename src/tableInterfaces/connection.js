@@ -19,7 +19,7 @@ var configureConnectionPool = function () {
         console.log("Connected to database.");
     });
 };
-var getConnection = function () {
+var getPool = function () {
     return pool;
 };
-module.exports = { configureConnectionPool: configureConnectionPool, getConnection: getConnection };
+module.exports = { configureConnectionPool: configureConnectionPool, getPool: getPool };

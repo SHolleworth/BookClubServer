@@ -55,12 +55,12 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.retrieveClubs = exports.insertClub = void 0;
-var getConnection = require('./connection').getConnection;
+var getPool = require('./connection').getPool;
 exports.insertClub = function (clubData, pool) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) {
                 if (!pool)
-                    pool = getConnection();
+                    pool = getPool();
                 if (pool) {
                     try {
                         console.log("Inserting new club.");
@@ -112,7 +112,7 @@ exports.retrieveClubs = function (user, pool) {
     console.log("Inside retrieving clubs.");
     return new Promise(function (resolve, reject) {
         if (!pool)
-            pool = getConnection();
+            pool = getPool();
         var clubDataBelongingToUser = [];
         var memberDataBelongingToClubs = [];
         var userDataBelongingToMembers = [];

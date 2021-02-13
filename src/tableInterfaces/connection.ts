@@ -1,7 +1,7 @@
 const mysql = require('mysql')
 const fs = require('fs')
 
-import { Pool } from '../../node_modules/@types/mysql'
+import { Pool } from 'mysql'
 
 let password = ''
 
@@ -26,8 +26,8 @@ const configureConnectionPool = () => {
     })
 }
 
-const getConnection = () => {
+const getPool = () => {
     return pool
 }
 
-module.exports = { configureConnectionPool, getConnection }
+module.exports = { configureConnectionPool, getPool }

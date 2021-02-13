@@ -47,13 +47,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var getConnection = require('./connection').getConnection;
+var getPool = require('./connection').getPool;
 var insertBook = function (book, pool) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) {
                 //Request pool from connection if none supplied
                 if (!pool)
-                    pool = getConnection();
+                    pool = getPool();
                 if (!book.info.authors) {
                     book.info.authors = [""];
                 }
@@ -118,7 +118,7 @@ var retrieveBooksOfShelves = function (shelves, connection) { return __awaiter(v
         return [2 /*return*/, new Promise(function (resolve, reject) {
                 //Request connection from pool if none supplied
                 if (!connection)
-                    connection = getConnection();
+                    connection = getPool();
                 var books = [];
                 if (!shelves.length) {
                     console.log("No books to retrieve.");
@@ -176,7 +176,7 @@ var retrieveAndAppendBookInfo = function (books, connection) { return __awaiter(
         return [2 /*return*/, new Promise(function (resolve, reject) {
                 //Request connection from pool if none supplied
                 if (!connection)
-                    connection = getConnection();
+                    connection = getPool();
                 var bookIds = books.map(function (book) { return book.id; });
                 try {
                     connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds], function (error, results) {

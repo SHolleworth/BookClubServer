@@ -1,6 +1,6 @@
-const { getConnection } = require('./connection')
+const { getPool } = require('./connection')
 import { ShelfObject, UserObject } from '../../../types'
-import { Pool } from '../../node_modules/@types/mysql' 
+import { Pool } from 'mysql' 
 
 const insertShelf = async (shelf: ShelfObject, connection: Pool) => {
     
@@ -9,7 +9,7 @@ const insertShelf = async (shelf: ShelfObject, connection: Pool) => {
         console.log("Inserting shelf " + shelf.name)
 
         //If no connection supplied, request one from the pool
-        if(!connection) connection = getConnection()
+        if(!connection) connection = getPool()
 
         try {
 
@@ -48,7 +48,7 @@ const retrieveShelvesOfUser = async (user: UserObject, connection: Pool): Promis
     return new Promise((resolve, reject) => {
 
         //If no connection supplied, request one from the pool
-        if(!connection) connection = getConnection()
+        if(!connection) connection = getPool()
 
         try {
 

@@ -1,14 +1,14 @@
 import { BookObject, ShelfObject } from "../../../types"
-import { Pool } from "../../node_modules/@types/mysql/"
+import { Pool } from "mysql"
 
-const { getConnection } = require('./connection')
+const { getPool } = require('./connection')
 
 const insertBook = async (book: BookObject, pool: Pool) => {
     
     return new Promise((resolve, reject) => {
         
         //Request pool from connection if none supplied
-        if (!pool) pool = getConnection()
+        if (!pool) pool = getPool()
 
         if(!book.info.authors) {
 
@@ -125,7 +125,7 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[], connection: Pool) 
     return new Promise((resolve, reject) => {
         
         //Request connection from pool if none supplied
-        if (!connection) connection = getConnection()
+        if (!connection) connection = getPool()
 
         let books: BookObject[] = []
 
@@ -219,7 +219,7 @@ const retrieveAndAppendBookInfo = async (books: BookObject[], connection: Pool) 
     return new Promise((resolve, reject) => {
         
         //Request connection from pool if none supplied
-        if (!connection) connection = getConnection()
+        if (!connection) connection = getPool()
 
         const bookIds: (number | null)[] = books.map(book => book.id)
 
