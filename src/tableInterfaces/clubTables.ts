@@ -5,6 +5,8 @@ export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
     
     return new Promise(async (resolve, reject) => {
 
+        console.log("Attempting to insert club: " + clubData.name)
+
         const connection: Connection = new (ConnectionWrapper as any)()
 
         try {
@@ -25,7 +27,11 @@ export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
 
             connection.release()
 
-            return resolve("Successfully added club to database.")
+            const message = "Successfully added club to database."
+
+            console.log(message)
+
+            return resolve(message)
 
         }
         catch (error){
@@ -33,6 +39,8 @@ export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
             await connection.rollback()
         
             connection.release()
+
+            console.error(error)
 
             return reject(error)
 
@@ -43,11 +51,12 @@ export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
 }
 
 export const retrieveClubs = (user: UserObject): Promise<ClubObject[]> => {
-
-    console.log("Inside retrieving clubs.")
     
     return new Promise(async (resolve, reject) => {
         
+        console.log("Attempting to retrieve clubs of user: " + user.username)
+
+        const message =  (clubs: ClubObject[]) =>  `Retrieved ${clubs.length} clubs of user: ` + user.username
 
         let clubDataBelongingToUser: ClubData[] = []
 
@@ -71,6 +80,8 @@ export const retrieveClubs = (user: UserObject): Promise<ClubObject[]> => {
 
             if(clubDataBelongingToUser.length < 1) {
 
+                console.log(message([]))
+
                 return resolve([])
 
             }
@@ -89,13 +100,18 @@ export const retrieveClubs = (user: UserObject): Promise<ClubObject[]> => {
 
             connection.release()
 
+            console.log(message(clubs))
+
             return resolve(clubs)
+
         }
         catch (error) {
 
-            connection.rollback()
+            await connection.rollback()
 
             connection.release()
+
+            console.error(error)
 
             return reject(error)
         }

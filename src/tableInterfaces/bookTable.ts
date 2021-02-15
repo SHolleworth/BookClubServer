@@ -33,7 +33,11 @@ const insertBook = async (book: BookObject) => {
 
             connection.release()
 
-            return resolve("Added book and info to database.")
+            const message = "Added book and info to database."
+
+            console.log(message)
+
+            return resolve(message)
 
         }
         catch (error) {
@@ -44,12 +48,16 @@ const insertBook = async (book: BookObject) => {
 
                 connection.release()
 
+                console.error(error)
+
                 return reject(error)
 
             }
             catch (error) {
 
                 connection.release()
+
+                console.error(error)
 
                 return reject(error)
 
@@ -64,11 +72,13 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[]) => {
     
     return new Promise(async (resolve, reject) => {
 
+        const message = (books: BookObject[]) => `Retrieved ${books.length} books.`
+
         let books: BookObject[] = []
 
         if(!shelves.length) {
 
-            console.log("No books to retrieve.")
+            console.log(message(books))
 
             return resolve(books)
         }
@@ -87,11 +97,19 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[]) => {
 
             if(books.length) {
 
-                const booksWithInfo = await retrieveAndAppendBookInfo(books, connection)
+                const booksWithInfo: BookObject[] = await retrieveAndAppendBookInfo(books, connection)
+
+                connection.release()
+
+                console.log(message(booksWithInfo))
 
                 return resolve(booksWithInfo)
             }
             else {
+
+                connection.release()
+
+                console.log(message(books))
 
                 return resolve(books)
 
@@ -102,6 +120,8 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[]) => {
 
             connection.release()
 
+            console.error(error)
+
             return reject(error)
 
         }
@@ -110,7 +130,7 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[]) => {
 
 }
 
-const retrieveAndAppendBookInfo = async (books: BookObject[], connection: Connection) => {
+const retrieveAndAppendBookInfo = async (books: BookObject[], connection: Connection): Promise<BookObject[]> => {
 
     return new Promise(async (resolve, reject) => {
 
@@ -119,8 +139,6 @@ const retrieveAndAppendBookInfo = async (books: BookObject[], connection: Connec
         try {
 
             const bookInfo = await connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds])
-
-            console.log("Retrieved book info.")
 
             return resolve(books.map((book, i) => 
                 {

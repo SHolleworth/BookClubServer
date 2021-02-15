@@ -11,7 +11,7 @@ exports.configureConnectionPool = function () {
             throw err;
         password = data;
         pool = mysql.createPool({
-            connectionLimit: 10,
+            connectionLimit: 2,
             host: 'localhost',
             user: 'root',
             password: password,

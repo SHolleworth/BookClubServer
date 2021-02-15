@@ -14,7 +14,7 @@ const { insertShelf, retrieveShelvesOfUser } = require('./tableInterfaces/shelfT
 const { insertUser, retrieveUser } = require('./tableInterfaces/userTable')
 
 import { BookObject, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject } from '../../types' 
-import { insertClub, retrieveClubs } from "./tableInterfaces/clubTables"
+import { insertClub, retrieveClubs as retrieveClubsOfUser } from "./tableInterfaces/clubTables"
 
 fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
@@ -73,9 +73,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //User login request
         socket.on('login_as_user', async (user: UserLoginObject) =>{
 
-            let userData: UserLoginDataObject = { user: { id: null, username: null }, shelves: [], books: [] }
-
-            const connection = getPool()
+            let userData: UserLoginDataObject = { user: { id: null, username: null }, shelves: [], books: [], clubs: [] }
 
             try {
                 userData.user = await retrieveUser(user)
@@ -83,6 +81,8 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 userData.shelves = await retrieveShelvesOfUser(userData.user)
 
                 userData.books = await retrieveBooksOfShelves(userData.shelves)
+
+                userData.clubs = await retrieveClubsOfUser(userData.user)
                 
                 console.log("User logging on: " + userData.user.username)
 
@@ -197,7 +197,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
             console.log("Retrieving clubs for user: " + user.id)
             
-            retrieveClubs(user)
+            retrieveClubsOfUser(user)
             .then((clubs: ClubObject[]) => {
                 
                 socket.emit('retrieve_clubs_response', clubs)

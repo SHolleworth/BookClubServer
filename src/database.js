@@ -111,8 +111,10 @@ function default_1() {
         });
     }); };
     this.release = function () {
-        if (_this.connection)
+        if (_this.connection) {
+            console.log("Releasing connection");
             _this.connection.release();
+        }
     };
     this.rollback = function () { return __awaiter(_this, void 0, void 0, function () {
         var _this = this;

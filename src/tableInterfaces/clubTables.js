@@ -62,10 +62,11 @@ var database_1 = __importDefault(require("../database"));
 exports.insertClub = function (clubData) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var connection, insertedClubRow, clubId, newClubMember, error_1;
+                var connection, insertedClubRow, clubId, newClubMember, message, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
+                            console.log("Attempting to insert club: " + clubData.name);
                             connection = new database_1.default();
                             _a.label = 1;
                         case 1:
@@ -88,13 +89,16 @@ exports.insertClub = function (clubData) { return __awaiter(void 0, void 0, void
                         case 6:
                             _a.sent();
                             connection.release();
-                            return [2 /*return*/, resolve("Successfully added club to database.")];
+                            message = "Successfully added club to database.";
+                            console.log(message);
+                            return [2 /*return*/, resolve(message)];
                         case 7:
                             error_1 = _a.sent();
                             return [4 /*yield*/, connection.rollback()];
                         case 8:
                             _a.sent();
                             connection.release();
+                            console.error(error_1);
                             return [2 /*return*/, reject(error_1)];
                         case 9: return [2 /*return*/];
                     }
@@ -103,19 +107,20 @@ exports.insertClub = function (clubData) { return __awaiter(void 0, void 0, void
     });
 }); };
 exports.retrieveClubs = function (user) {
-    console.log("Inside retrieving clubs.");
     return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-        var clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, connection, memberDataOfUser, clubIdsOfUser, clubIds, memberIds, clubs, error_2;
+        var message, clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, connection, memberDataOfUser, clubIdsOfUser, clubIds, memberIds, clubs, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    console.log("Attempting to retrieve clubs of user: " + user.username);
+                    message = function (clubs) { return "Retrieved " + clubs.length + " clubs of user: " + user.username; };
                     clubDataBelongingToUser = [];
                     memberDataBelongingToClubs = [];
                     userDataBelongingToMembers = [];
                     connection = new database_1.default();
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 9, , 10]);
+                    _a.trys.push([1, 9, , 11]);
                     return [4 /*yield*/, connection.getPoolConnection()];
                 case 2:
                     _a.sent();
@@ -130,6 +135,7 @@ exports.retrieveClubs = function (user) {
                 case 5:
                     clubDataBelongingToUser = _a.sent();
                     if (clubDataBelongingToUser.length < 1) {
+                        console.log(message([]));
                         return [2 /*return*/, resolve([])];
                     }
                     clubIds = clubDataBelongingToUser.map(function (clubData) { return clubData.id; });
@@ -145,13 +151,17 @@ exports.retrieveClubs = function (user) {
                 case 8:
                     _a.sent();
                     connection.release();
+                    console.log(message(clubs));
                     return [2 /*return*/, resolve(clubs)];
                 case 9:
                     error_2 = _a.sent();
-                    connection.rollback();
+                    return [4 /*yield*/, connection.rollback()];
+                case 10:
+                    _a.sent();
                     connection.release();
+                    console.error(error_2);
                     return [2 /*return*/, reject(error_2)];
-                case 10: return [2 /*return*/];
+                case 11: return [2 /*return*/];
             }
         });
     }); });

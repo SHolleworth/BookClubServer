@@ -45,6 +45,7 @@ var database_1 = __importDefault(require("../database"));
 var SALT_ROUNDS = 10;
 var insertUser = function (user) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
+        console.log("Attempting to insert user: " + user.username);
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
                 var connection, username, password, user_1, _a, hash, salt, message, error_1;
                 return __generator(this, function (_b) {
@@ -61,8 +62,10 @@ var insertUser = function (user) { return __awaiter(void 0, void 0, void 0, func
                             return [4 /*yield*/, connection.query("SELECT * FROM User WHERE username = ?", [username])];
                         case 3:
                             user_1 = _b.sent();
-                            if (user_1.length)
+                            if (user_1.length) {
+                                connection.release();
                                 return [2 /*return*/, resolve("That username already exists.")];
+                            }
                             return [4 /*yield*/, hashPassword(password)];
                         case 4:
                             _a = _b.sent(), hash = _a.hash, salt = _a.salt;
@@ -70,10 +73,12 @@ var insertUser = function (user) { return __awaiter(void 0, void 0, void 0, func
                         case 5:
                             message = _b.sent();
                             connection.release();
+                            console.log("Inserted user: " + user_1.username);
                             return [2 /*return*/, resolve(message)];
                         case 6:
                             error_1 = _b.sent();
                             connection.release();
+                            console.error(error_1);
                             return [2 /*return*/, reject(error_1)];
                         case 7: return [2 /*return*/];
                     }
@@ -83,8 +88,9 @@ var insertUser = function (user) { return __awaiter(void 0, void 0, void 0, func
 }); };
 var retrieveUser = function (userToRetrieve) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
+        console.log("Attempting to retrieve user: " + userToRetrieve.username);
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var connection, existingUsers_1, hash, error_2;
+                var connection, existingUsers_1, error, hash, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -100,27 +106,36 @@ var retrieveUser = function (userToRetrieve) { return __awaiter(void 0, void 0, 
                             existingUsers_1 = _a.sent();
                             if (existingUsers_1.length > 1) {
                                 connection.release();
-                                return [2 /*return*/, reject("Error, more than 1 user with name " + userToRetrieve.username + " found.")];
+                                error = "Error, more than 1 user with name " + userToRetrieve.username + " found.";
+                                console.error(error);
+                                return [2 /*return*/, reject(error)];
                             }
                             hash = existingUsers_1[0].password;
                             bcrypt.compare(userToRetrieve.password, hash, function (err, result) {
                                 if (err) {
                                     connection.release();
-                                    return reject("Error comparing passwords: " + err);
+                                    var error = "Error comparing passwords: " + err;
+                                    console.error(error);
+                                    return reject(error);
                                 }
                                 if (result) {
                                     var user = { id: existingUsers_1[0].id, username: existingUsers_1[0].username };
+                                    connection.release();
+                                    console.log("Retrieved user: " + user.username);
                                     return resolve(user);
                                 }
                                 else {
                                     connection.release();
-                                    return resolve("Incorrect Password");
+                                    var error = "Incorrect Password";
+                                    console.error(error);
+                                    return resolve(error);
                                 }
                             });
                             return [3 /*break*/, 5];
                         case 4:
                             error_2 = _a.sent();
                             connection.release();
+                            console.error(error_2);
                             return [2 /*return*/, reject(error_2)];
                         case 5: return [2 /*return*/];
                     }
@@ -146,7 +161,7 @@ var hashPassword = function (password) { return __awaiter(void 0, void 0, void 0
 var insertUserSQL = function (connection, username, hashedPassword, salt) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var user, error_3;
+                var user, message, error_3;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -158,11 +173,12 @@ var insertUserSQL = function (connection, username, hashedPassword, salt) { retu
                             return [4 /*yield*/, connection.query("INSERT INTO User SET ?", [user])];
                         case 2:
                             _a.sent();
-                            connection.release();
-                            return [2 /*return*/, resolve("User " + username + " added to database.")];
+                            message = "User " + username + " added to database.";
+                            console.log(message);
+                            return [2 /*return*/, resolve(message)];
                         case 3:
                             error_3 = _a.sent();
-                            connection.release();
+                            console.error(error_3);
                             return [2 /*return*/, reject(error_3)];
                         case 4: return [2 /*return*/];
                     }

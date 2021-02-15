@@ -20,13 +20,19 @@ const insertShelf = async (shelf: ShelfObject) => {
             await connection.query('INSERT INTO Shelf (name, userId) VALUES (?, ?)', [shelf.name, shelf.userId])
 
             connection.release()
+
+            const message = "Successfully added shelf to database."
+
+            console.log(message)
             
-            return resolve("Successfully added shelf to database.")
+            return resolve(message)
 
         }
         catch (error) {
 
             connection.release()
+
+            console.error(error)
 
             return reject(error)
 
@@ -50,6 +56,10 @@ const retrieveShelvesOfUser = async (user: UserObject): Promise<ShelfObject[]> =
 
             connection.release()
 
+            const message = `Retrieved ${shelves.length} shelves of user ${user.username}.`
+
+            console.log(message)
+
             return resolve(shelves)
 
 
@@ -57,6 +67,8 @@ const retrieveShelvesOfUser = async (user: UserObject): Promise<ShelfObject[]> =
         catch (error) {
 
             connection.release()
+
+            console.error(error)
 
             return reject(error)
 

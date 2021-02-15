@@ -134,7 +134,13 @@ export default function (this: Connection) {
 
     this.release = () => {
 
-        if(this.connection) this.connection.release()
+        if(this.connection) {
+            
+            console.log("Releasing connection")
+
+            this.connection.release()
+
+        }
 
     }
 

@@ -43,7 +43,7 @@ var database_1 = __importDefault(require("../database"));
 var insertShelf = function (shelf) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var connection, existingShelves, error_1;
+                var connection, existingShelves, message, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -64,10 +64,13 @@ var insertShelf = function (shelf) { return __awaiter(void 0, void 0, void 0, fu
                         case 4:
                             _a.sent();
                             connection.release();
-                            return [2 /*return*/, resolve("Successfully added shelf to database.")];
+                            message = "Successfully added shelf to database.";
+                            console.log(message);
+                            return [2 /*return*/, resolve(message)];
                         case 5:
                             error_1 = _a.sent();
                             connection.release();
+                            console.error(error_1);
                             return [2 /*return*/, reject(error_1)];
                         case 6: return [2 /*return*/];
                     }
@@ -78,7 +81,7 @@ var insertShelf = function (shelf) { return __awaiter(void 0, void 0, void 0, fu
 var retrieveShelvesOfUser = function (user) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var connection, shelves, error_2;
+                var connection, shelves, message, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -93,10 +96,13 @@ var retrieveShelvesOfUser = function (user) { return __awaiter(void 0, void 0, v
                         case 3:
                             shelves = _a.sent();
                             connection.release();
+                            message = "Retrieved " + shelves.length + " shelves of user " + user.username + ".";
+                            console.log(message);
                             return [2 /*return*/, resolve(shelves)];
                         case 4:
                             error_2 = _a.sent();
                             connection.release();
+                            console.error(error_2);
                             return [2 /*return*/, reject(error_2)];
                         case 5: return [2 /*return*/];
                     }

@@ -7,6 +7,8 @@ const SALT_ROUNDS = 10
 
 const insertUser = async (user: UserRegisterObject) => {
 
+    console.log("Attempting to insert user: " + user.username)
+
     return new Promise(async (resolve, reject) => {
 
         const connection = new (ConnectionWrapper as any)()
@@ -19,7 +21,13 @@ const insertUser = async (user: UserRegisterObject) => {
 
             const user = await connection.query(`SELECT * FROM User WHERE username = ?`, [username])
 
-            if (user.length) return resolve("That username already exists.")
+            if (user.length) {
+              
+                connection.release()
+
+                return resolve("That username already exists.")
+
+            } 
 
             const { hash, salt } = await hashPassword(password)
 
@@ -27,12 +35,16 @@ const insertUser = async (user: UserRegisterObject) => {
 
             connection.release()
 
+            console.log("Inserted user: " + user.username)
+
             return resolve(message)
 
         }
         catch (error) {
 
             connection.release()
+
+            console.error(error)
 
             return reject(error)
 
@@ -42,6 +54,8 @@ const insertUser = async (user: UserRegisterObject) => {
 }
 
 const retrieveUser = async (userToRetrieve: UserLoginObject): Promise<UserObject | string> => {
+
+    console.log("Attempting to retrieve user: " + userToRetrieve.username)
     
     return new Promise(async (resolve, reject) => {
         
@@ -57,7 +71,11 @@ const retrieveUser = async (userToRetrieve: UserLoginObject): Promise<UserObject
                 
                 connection.release()
 
-                return reject(`Error, more than 1 user with name ${userToRetrieve.username} found.`)
+                const error = `Error, more than 1 user with name ${userToRetrieve.username} found.`
+
+                console.error(error)
+
+                return reject(error)
 
             }
 
@@ -68,14 +86,22 @@ const retrieveUser = async (userToRetrieve: UserLoginObject): Promise<UserObject
                 if (err) {
                     
                     connection.release()
+
+                    const error = `Error comparing passwords: ` + err
+
+                    console.error(error)
                     
-                    return reject(`Error comparing passwords: ` + err)
+                    return reject(error)
 
                 }
 
                 if(result) {
 
                     const user = { id: existingUsers[0].id, username: existingUsers[0].username }
+
+                    connection.release()
+
+                    console.log("Retrieved user: " + user.username)
 
                     return resolve(user)
 
@@ -84,7 +110,11 @@ const retrieveUser = async (userToRetrieve: UserLoginObject): Promise<UserObject
 
                     connection.release()
 
-                    return resolve("Incorrect Password")
+                    const error = "Incorrect Password"
+
+                    console.error(error)
+
+                    return resolve(error)
 
                 }
 
@@ -94,6 +124,8 @@ const retrieveUser = async (userToRetrieve: UserLoginObject): Promise<UserObject
         catch (error) {
 
             connection.release()
+
+            console.error(error)
 
             return reject(error)
 
@@ -136,14 +168,16 @@ const insertUserSQL = async (connection: Connection, username: string, hashedPas
             
             await connection.query("INSERT INTO User SET ?", [user])
 
-            connection.release()
+            const message = `User ${username} added to database.`
 
-            return resolve(`User ${username} added to database.`)
+            console.log(message)
+
+            return resolve(message)
 
         }
         catch (error) {
 
-            connection.release()
+            console.error(error)
 
             return reject(error)
             

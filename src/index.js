@@ -81,35 +81,38 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         });
         //User login request
         socket.on('login_as_user', function (user) { return __awaiter(void 0, void 0, void 0, function () {
-            var userData, connection, _a, _b, _c, error_1;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var userData, _a, _b, _c, _d, error_1;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
-                        userData = { user: { id: null, username: null }, shelves: [], books: [] };
-                        connection = getPool();
-                        _d.label = 1;
+                        userData = { user: { id: null, username: null }, shelves: [], books: [], clubs: [] };
+                        _e.label = 1;
                     case 1:
-                        _d.trys.push([1, 5, , 6]);
+                        _e.trys.push([1, 6, , 7]);
                         _a = userData;
                         return [4 /*yield*/, retrieveUser(user)];
                     case 2:
-                        _a.user = _d.sent();
+                        _a.user = _e.sent();
                         _b = userData;
                         return [4 /*yield*/, retrieveShelvesOfUser(userData.user)];
                     case 3:
-                        _b.shelves = _d.sent();
+                        _b.shelves = _e.sent();
                         _c = userData;
                         return [4 /*yield*/, retrieveBooksOfShelves(userData.shelves)];
                     case 4:
-                        _c.books = _d.sent();
+                        _c.books = _e.sent();
+                        _d = userData;
+                        return [4 /*yield*/, clubTables_1.retrieveClubs(userData.user)];
+                    case 5:
+                        _d.clubs = _e.sent();
                         console.log("User logging on: " + userData.user.username);
                         socket.emit('login_as_user_response', userData);
-                        return [3 /*break*/, 6];
-                    case 5:
-                        error_1 = _d.sent();
+                        return [3 /*break*/, 7];
+                    case 6:
+                        error_1 = _e.sent();
                         socket.emit('login_as_user_error', error_1);
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
             });
         }); });

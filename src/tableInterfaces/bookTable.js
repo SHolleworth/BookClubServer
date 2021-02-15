@@ -54,7 +54,7 @@ var database_1 = __importDefault(require("../database"));
 var insertBook = function (book) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var connection, existingBooks, insertBookResult, bookInfo, error_1, error_2;
+                var connection, existingBooks, insertBookResult, bookInfo, message, error_1, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -87,7 +87,9 @@ var insertBook = function (book) { return __awaiter(void 0, void 0, void 0, func
                         case 7:
                             _a.sent();
                             connection.release();
-                            return [2 /*return*/, resolve("Added book and info to database.")];
+                            message = "Added book and info to database.";
+                            console.log(message);
+                            return [2 /*return*/, resolve(message)];
                         case 8:
                             error_1 = _a.sent();
                             _a.label = 9;
@@ -97,10 +99,12 @@ var insertBook = function (book) { return __awaiter(void 0, void 0, void 0, func
                         case 10:
                             _a.sent();
                             connection.release();
+                            console.error(error_1);
                             return [2 /*return*/, reject(error_1)];
                         case 11:
                             error_2 = _a.sent();
                             connection.release();
+                            console.error(error_2);
                             return [2 /*return*/, reject(error_2)];
                         case 12: return [3 /*break*/, 13];
                         case 13: return [2 /*return*/];
@@ -112,13 +116,14 @@ var insertBook = function (book) { return __awaiter(void 0, void 0, void 0, func
 var retrieveBooksOfShelves = function (shelves) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var books, connection, books_1, shelfIds, booksWithInfo, error_3;
+                var message, books, connection, books_1, shelfIds, booksWithInfo, error_3;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
+                            message = function (books) { return "Retrieved " + books.length + " books."; };
                             books = [];
                             if (!shelves.length) {
-                                console.log("No books to retrieve.");
+                                console.log(message(books));
                                 return [2 /*return*/, resolve(books)];
                             }
                             connection = new database_1.default();
@@ -137,12 +142,18 @@ var retrieveBooksOfShelves = function (shelves) { return __awaiter(void 0, void 
                             return [4 /*yield*/, retrieveAndAppendBookInfo(books_1, connection)];
                         case 4:
                             booksWithInfo = _a.sent();
+                            connection.release();
+                            console.log(message(booksWithInfo));
                             return [2 /*return*/, resolve(booksWithInfo)];
-                        case 5: return [2 /*return*/, resolve(books_1)];
+                        case 5:
+                            connection.release();
+                            console.log(message(books_1));
+                            return [2 /*return*/, resolve(books_1)];
                         case 6: return [3 /*break*/, 8];
                         case 7:
                             error_3 = _a.sent();
                             connection.release();
+                            console.error(error_3);
                             return [2 /*return*/, reject(error_3)];
                         case 8: return [2 /*return*/];
                     }
@@ -164,7 +175,6 @@ var retrieveAndAppendBookInfo = function (books, connection) { return __awaiter(
                             return [4 /*yield*/, connection.query('SELECT * FROM BookInfo WHERE bookId IN (?)', [bookIds])];
                         case 2:
                             bookInfo_1 = _a.sent();
-                            console.log("Retrieved book info.");
                             return [2 /*return*/, resolve(books.map(function (book, i) {
                                     book.info = bookInfo_1[i];
                                     if (bookInfo_1[i].authors.includes(',')) {
