@@ -37,36 +37,37 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         console.log("Client connected")
 
         //Search bar query from client
-        socket.on('search_google_books_by_title', (query: string) => {
+        socket.on('search_google_books_by_title', async (query: string) => {
 
-            searchGoogleBooksByTitle(query, apiKey)
-            .then((response: object[]) => {
+            try {
+                const volumeData = await searchGoogleBooksByTitle(query, apiKey)
 
-                socket.emit('google_books_by_title_response', response)
-
-            })
-            .catch((error: string) => {
+                socket.emit('google_books_by_title_response', volumeData)
+            }
+            catch (error) {
 
                 socket.emit('google_books_by_title_error', error)
 
-            })
+            }
         })
 
 
         //New user registration
-        socket.on('register_new_user', (user: UserRegisterObject) => {
+        socket.on('register_new_user', async (user: UserRegisterObject) => {
 
-            insertUser(user)
-            .then((response: string) => {
-            
-                socket.emit('register_new_user_response', response)
+            try {
 
-            })
-            .catch((error: string) => {
+                const message = await insertUser(user)
+
+                socket.emit('register_new_user_response', message)
+
+
+            }
+            catch (error) {
 
                 socket.emit('register_new_user_error', error)
 
-            })
+            }
 
         })
 
@@ -98,34 +99,36 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //New shelf to add to database
         socket.on('post_new_shelf' , async (shelf: ShelfObject) => {
 
-            insertShelf(shelf)
-            .then((results: string) => {
-                
-                socket.emit('post_new_shelf_response', results)
+            try {
 
-            })
-            .catch((error: string) => {
+                const message = await insertShelf(shelf)
+
+                socket.emit('post_new_shelf_response', message)
+
+            }
+            catch(error) {
 
                 socket.emit('post_new_shelf_error', error)
 
-            })
+            }
 
         })
 
         //Retrieve shelves of user
         socket.on('retrieve_shelves', async (user: UserObject) => {
 
-            retrieveShelvesOfUser(user)
-            .then((shelves: ShelfObject[]) => {
-                
+            try {
+
+                const shelves = await retrieveShelvesOfUser(user)
+
                 socket.emit('retrieve_shelves_response', shelves)
 
-            })
-            .catch((error: string) => {
+            }
+            catch(error) {
               
                 socket.emit('retrieve_shelves_error', error)
 
-            })
+            }
 
         })
 
@@ -133,17 +136,18 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //New book to add to database
         socket.on('post_new_book', async (book: BookObject) =>{
 
-            insertBook(book)
-            .then((results: string) => {
-                
-                socket.emit('post_new_book_response', results)
+            try {
 
-            })
-            .catch((error: string) => {
+                const message = await insertBook(book)
+
+                socket.emit('post_new_book_response', message)
+
+            }
+            catch(error){
                 
                 socket.emit('post_new_book_error', error)
 
-            })
+            }
 
         })
 
@@ -152,43 +156,38 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
             const data: {shelves: ShelfObject[], books: BookObject[]} = { shelves: [], books: [] }
 
-            retrieveShelvesOfUser(user)
-            .then((shelves: ShelfObject[]) => {
-                
-                data.shelves = shelves
+            try {
 
-                return retrieveBooksOfShelves(shelves)
+                data.shelves = await retrieveShelvesOfUser(user)
 
-            })
-            .then((books: BookObject[]) => {
-
-                data.books = books
+                data.books = await retrieveBooksOfShelves(data.shelves)
                 
                 socket.emit('retrieve_books_response', data)
 
-            })
-            .catch((error: string) => {
+            }
+            catch(error) {
                 
                 socket.emit('retrieve_books_error', error)
                 
-            })
+            }
 
         })
 
         //Post new club
         socket.on('post_new_club', async (clubData: ClubPostObject) => {
 
-            insertClub(clubData)
-            .then((results: string) => {
-                
-                socket.emit('post_new_club_response', results)
+            try {
 
-            })
-            .catch((error: string) => {
+                const message = await insertClub(clubData)
+
+                socket.emit('post_new_club_response', message)
+
+            }
+            catch(error) {
                 
                 socket.emit('post_new_club_error', error)
 
-            })
+            }
 
         })
 
@@ -196,18 +195,19 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         socket.on('retrieve_clubs', async (user: UserObject) => {
 
             console.log("Retrieving clubs for user: " + user.id)
-            
-            retrieveClubsOfUser(user)
-            .then((clubs: ClubObject[]) => {
-                
+
+            try {
+
+                const clubs = await retrieveClubsOfUser(user)
+
                 socket.emit('retrieve_clubs_response', clubs)
 
-            })
-            .catch((error: string) => {
+            }
+            catch(error) {
                 
                 socket.emit('retrieve_clubs_error', error)
 
-            })
+            }
             
         })
 
