@@ -33,6 +33,8 @@ export default function (this: Connection) {
 
                     this.connection = connection
 
+                    console.log("Got connection")
+
                     return resolve(1)
                 
                 })

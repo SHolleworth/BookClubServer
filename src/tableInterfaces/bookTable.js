@@ -46,77 +46,66 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var database_1 = __importDefault(require("../database"));
-var insertBook = function (book) { return __awaiter(void 0, void 0, void 0, function () {
+var insertBook = function (book, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var connection, existingBooks, insertBookResult, bookInfo, message, error_1, error_2;
+                var existingBooks, insertBookResult, bookInfo, message, error_1, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             if (!book.info.authors) {
                                 book.info.authors = [""];
                             }
-                            connection = new database_1.default();
                             _a.label = 1;
                         case 1:
-                            _a.trys.push([1, 8, , 13]);
-                            return [4 /*yield*/, connection.getPoolConnection()];
+                            _a.trys.push([1, 7, , 12]);
+                            return [4 /*yield*/, connection.beginTransaction()];
                         case 2:
                             _a.sent();
-                            return [4 /*yield*/, connection.beginTransaction()];
-                        case 3:
-                            _a.sent();
                             return [4 /*yield*/, connection.query('SELECT * FROM Book WHERE id = ?', [book.id])];
-                        case 4:
+                        case 3:
                             existingBooks = _a.sent();
                             if (existingBooks.length)
                                 return [2 /*return*/, reject("Error, book with id " + book.id + " already in database.")];
                             return [4 /*yield*/, connection.query('INSERT INTO Book (volumeId, shelfId) VALUES (?, ?)', [book.volumeId, book.shelfId])];
-                        case 5:
+                        case 4:
                             insertBookResult = _a.sent();
                             bookInfo = __assign(__assign({}, book.info), { authors: book.info.authors.toString(), bookId: insertBookResult.insertId });
                             return [4 /*yield*/, connection.query('INSERT INTO BookInfo SET ?', [bookInfo])];
-                        case 6:
+                        case 5:
                             _a.sent();
                             return [4 /*yield*/, connection.commit()];
-                        case 7:
+                        case 6:
                             _a.sent();
-                            connection.release();
                             message = "Added book and info to database.";
                             console.log(message);
                             return [2 /*return*/, resolve(message)];
-                        case 8:
+                        case 7:
                             error_1 = _a.sent();
-                            _a.label = 9;
-                        case 9:
-                            _a.trys.push([9, 11, , 12]);
+                            _a.label = 8;
+                        case 8:
+                            _a.trys.push([8, 10, , 11]);
                             return [4 /*yield*/, connection.rollback()];
-                        case 10:
+                        case 9:
                             _a.sent();
-                            connection.release();
                             console.error(error_1);
                             return [2 /*return*/, reject(error_1)];
-                        case 11:
+                        case 10:
                             error_2 = _a.sent();
-                            connection.release();
                             console.error(error_2);
                             return [2 /*return*/, reject(error_2)];
-                        case 12: return [3 /*break*/, 13];
-                        case 13: return [2 /*return*/];
+                        case 11: return [3 /*break*/, 12];
+                        case 12: return [2 /*return*/];
                     }
                 });
             }); })];
     });
 }); };
-var retrieveBooksOfShelves = function (shelves) { return __awaiter(void 0, void 0, void 0, function () {
+var retrieveBooksOfShelves = function (shelves, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var message, books, connection, books_1, shelfIds, booksWithInfo, error_3;
+                var message, books, books_1, shelfIds, booksWithInfo, error_3;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -126,36 +115,29 @@ var retrieveBooksOfShelves = function (shelves) { return __awaiter(void 0, void 
                                 console.log(message(books));
                                 return [2 /*return*/, resolve(books)];
                             }
-                            connection = new database_1.default();
                             _a.label = 1;
                         case 1:
-                            _a.trys.push([1, 7, , 8]);
-                            return [4 /*yield*/, connection.getPoolConnection()];
-                        case 2:
-                            _a.sent();
+                            _a.trys.push([1, 6, , 7]);
                             books_1 = [];
                             shelfIds = shelves.map(function (shelf) { return shelf.id; });
                             return [4 /*yield*/, connection.query('SELECT * FROM Book WHERE shelfId IN (?)', [shelfIds])];
-                        case 3:
+                        case 2:
                             books_1 = _a.sent();
-                            if (!books_1.length) return [3 /*break*/, 5];
+                            if (!books_1.length) return [3 /*break*/, 4];
                             return [4 /*yield*/, retrieveAndAppendBookInfo(books_1, connection)];
-                        case 4:
+                        case 3:
                             booksWithInfo = _a.sent();
-                            connection.release();
                             console.log(message(booksWithInfo));
                             return [2 /*return*/, resolve(booksWithInfo)];
-                        case 5:
-                            connection.release();
+                        case 4:
                             console.log(message(books_1));
                             return [2 /*return*/, resolve(books_1)];
-                        case 6: return [3 /*break*/, 8];
-                        case 7:
+                        case 5: return [3 /*break*/, 7];
+                        case 6:
                             error_3 = _a.sent();
-                            connection.release();
                             console.error(error_3);
                             return [2 /*return*/, reject(error_3)];
-                        case 8: return [2 /*return*/];
+                        case 7: return [2 /*return*/];
                     }
                 });
             }); })];

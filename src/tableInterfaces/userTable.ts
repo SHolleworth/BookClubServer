@@ -1,29 +1,23 @@
 const bcrypt = require('bcrypt')
 
 import { UserData, UserLoginObject, UserObject, UserRegisterObject } from '../../../types'
-import ConnectionWrapper, { Connection } from '../database'
+import { Connection } from '../database'
 
 const SALT_ROUNDS = 10
 
-const insertUser = async (user: UserRegisterObject) => {
+const insertUser = async (user: UserRegisterObject, connection: Connection) => {
 
     console.log("Attempting to insert user: " + user.username)
 
     return new Promise(async (resolve, reject) => {
 
-        const connection = new (ConnectionWrapper as any)()
-
         const { username, password } = user
 
-        try {
-
-            await connection.getPoolConnection()
+        try {           
 
             const user = await connection.query(`SELECT * FROM User WHERE username = ?`, [username])
 
             if (user.length) {
-              
-                connection.release()
 
                 return resolve("That username already exists.")
 
@@ -31,18 +25,14 @@ const insertUser = async (user: UserRegisterObject) => {
 
             const { hash, salt } = await hashPassword(password)
 
-            const message = await insertUserSQL(connection, username, hash, salt)
-
-            connection.release()
+            const message = await insertUserSQL(username, hash, salt, connection)         
 
             console.log("Inserted user: " + user.username)
 
             return resolve(message)
 
         }
-        catch (error) {
-
-            connection.release()
+        catch (error) {     
 
             console.error(error)
 
@@ -53,23 +43,17 @@ const insertUser = async (user: UserRegisterObject) => {
     })
 }
 
-const retrieveUser = async (userToRetrieve: UserLoginObject): Promise<UserObject | string> => {
+const retrieveUser = async (userToRetrieve: UserLoginObject, connection: Connection): Promise<UserObject | string> => {
 
     console.log("Attempting to retrieve user: " + userToRetrieve.username)
     
     return new Promise(async (resolve, reject) => {
         
-        const connection = new (ConnectionWrapper as any)()
-
         try {
-
-            await connection.getPoolConnection()
 
             const existingUsers = await connection.query('SELECT * FROM User WHERE username = ?', [userToRetrieve.username])
 
-            if (existingUsers.length > 1) {
-                
-                connection.release()
+            if (existingUsers.length > 1) {               
 
                 const error = `Error, more than 1 user with name ${userToRetrieve.username} found.`
 
@@ -85,8 +69,6 @@ const retrieveUser = async (userToRetrieve: UserLoginObject): Promise<UserObject
                     
                 if (err) {
                     
-                    connection.release()
-
                     const error = `Error comparing passwords: ` + err
 
                     console.error(error)
@@ -97,18 +79,14 @@ const retrieveUser = async (userToRetrieve: UserLoginObject): Promise<UserObject
 
                 if(result) {
 
-                    const user = { id: existingUsers[0].id, username: existingUsers[0].username }
-
-                    connection.release()
+                    const user = { id: existingUsers[0].id, username: existingUsers[0].username }                    
 
                     console.log("Retrieved user: " + user.username)
 
                     return resolve(user)
 
                 }
-                else {
-
-                    connection.release()
+                else {                    
 
                     const error = "Incorrect Password"
 
@@ -121,9 +99,7 @@ const retrieveUser = async (userToRetrieve: UserLoginObject): Promise<UserObject
             })
 
         }
-        catch (error) {
-
-            connection.release()
+        catch (error) {            
 
             console.error(error)
 
@@ -156,7 +132,7 @@ const hashPassword = async (password: string): Promise<{ hash: string, salt: str
     })
 }
 
-const insertUserSQL = async (connection: Connection, username: string, hashedPassword: string, salt: string): Promise<string> => {
+const insertUserSQL = async (username: string, hashedPassword: string, salt: string, connection: Connection): Promise<string> => {
 
     return new Promise(async (resolve, reject) => {
 

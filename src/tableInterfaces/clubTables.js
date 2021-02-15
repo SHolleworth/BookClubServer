@@ -53,62 +53,52 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.retrieveClubs = exports.insertClub = void 0;
-var database_1 = __importDefault(require("../database"));
-exports.insertClub = function (clubData) { return __awaiter(void 0, void 0, void 0, function () {
+exports.insertClub = function (clubData, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var connection, insertedClubRow, clubId, newClubMember, message, error_1;
+                var insertedClubRow, clubId, newClubMember, message, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             console.log("Attempting to insert club: " + clubData.name);
-                            connection = new database_1.default();
                             _a.label = 1;
                         case 1:
-                            _a.trys.push([1, 7, , 9]);
-                            return [4 /*yield*/, connection.getPoolConnection()];
+                            _a.trys.push([1, 6, , 8]);
+                            return [4 /*yield*/, connection.beginTransaction()];
                         case 2:
                             _a.sent();
-                            return [4 /*yield*/, connection.beginTransaction()];
-                        case 3:
-                            _a.sent();
                             return [4 /*yield*/, connection.query('INSERT INTO Club (name) VALUES (?)', [clubData.name])];
-                        case 4:
+                        case 3:
                             insertedClubRow = _a.sent();
                             clubId = insertedClubRow.insertId;
                             newClubMember = { userId: clubData.userId, clubId: clubId, admin: true };
                             return [4 /*yield*/, connection.query('INSERT INTO ClubMember SET ?', [newClubMember])];
-                        case 5:
+                        case 4:
                             _a.sent();
                             return [4 /*yield*/, connection.commit()];
-                        case 6:
+                        case 5:
                             _a.sent();
-                            connection.release();
                             message = "Successfully added club to database.";
                             console.log(message);
                             return [2 /*return*/, resolve(message)];
-                        case 7:
+                        case 6:
                             error_1 = _a.sent();
                             return [4 /*yield*/, connection.rollback()];
-                        case 8:
+                        case 7:
                             _a.sent();
-                            connection.release();
                             console.error(error_1);
                             return [2 /*return*/, reject(error_1)];
-                        case 9: return [2 /*return*/];
+                        case 8: return [2 /*return*/];
                     }
                 });
             }); })];
     });
 }); };
-exports.retrieveClubs = function (user) {
+exports.retrieveClubs = function (user, connection) {
     return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-        var message, clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, connection, memberDataOfUser, clubIdsOfUser, clubIds, memberIds, clubs, error_2;
+        var message, clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, memberDataOfUser, clubIdsOfUser, clubIds, memberIds, clubs, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -117,22 +107,18 @@ exports.retrieveClubs = function (user) {
                     clubDataBelongingToUser = [];
                     memberDataBelongingToClubs = [];
                     userDataBelongingToMembers = [];
-                    connection = new database_1.default();
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 9, , 11]);
-                    return [4 /*yield*/, connection.getPoolConnection()];
+                    _a.trys.push([1, 8, , 10]);
+                    return [4 /*yield*/, connection.beginTransaction()];
                 case 2:
                     _a.sent();
-                    return [4 /*yield*/, connection.beginTransaction()];
-                case 3:
-                    _a.sent();
                     return [4 /*yield*/, connection.query('SELECT * FROM ClubMember WHERE userId = ?', [user.id])];
-                case 4:
+                case 3:
                     memberDataOfUser = _a.sent();
                     clubIdsOfUser = memberDataOfUser.map(function (memberData) { return memberData.clubId; });
                     return [4 /*yield*/, connection.query('SELECT * FROM Club WHERE id IN (?)', [clubIdsOfUser])];
-                case 5:
+                case 4:
                     clubDataBelongingToUser = _a.sent();
                     if (clubDataBelongingToUser.length < 1) {
                         console.log(message([]));
@@ -140,28 +126,26 @@ exports.retrieveClubs = function (user) {
                     }
                     clubIds = clubDataBelongingToUser.map(function (clubData) { return clubData.id; });
                     return [4 /*yield*/, connection.query('SELECT * FROM ClubMember WHERE clubId IN (?)', [clubIds])];
-                case 6:
+                case 5:
                     memberDataBelongingToClubs = _a.sent();
                     memberIds = memberDataBelongingToClubs.map(function (memberData) { return memberData.userId; });
                     return [4 /*yield*/, connection.query('SELECT * FROM User WHERE id IN (?)', [memberIds])];
-                case 7:
+                case 6:
                     userDataBelongingToMembers = _a.sent();
                     clubs = formatClubObjects(clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers);
                     return [4 /*yield*/, connection.commit()];
-                case 8:
+                case 7:
                     _a.sent();
-                    connection.release();
                     console.log(message(clubs));
                     return [2 /*return*/, resolve(clubs)];
-                case 9:
+                case 8:
                     error_2 = _a.sent();
                     return [4 /*yield*/, connection.rollback()];
-                case 10:
+                case 9:
                     _a.sent();
-                    connection.release();
                     console.error(error_2);
                     return [2 /*return*/, reject(error_2)];
-                case 11: return [2 /*return*/];
+                case 10: return [2 /*return*/];
             }
         });
     }); });

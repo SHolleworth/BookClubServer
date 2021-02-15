@@ -1,7 +1,7 @@
 import { BookObject, ShelfObject } from "../../../types"
-import ConnectionWrapper, { Connection } from '../database'
+import { Connection } from '../database'
 
-const insertBook = async (book: BookObject) => {
+const insertBook = async (book: BookObject, connection: Connection) => {
     
     return new Promise(async (resolve, reject) => {
 
@@ -11,11 +11,7 @@ const insertBook = async (book: BookObject) => {
 
         }
 
-        const connection: Connection = new (ConnectionWrapper as any)()
-
         try {
-
-            await connection.getPoolConnection()
 
             await connection.beginTransaction()
 
@@ -31,8 +27,6 @@ const insertBook = async (book: BookObject) => {
 
             await connection.commit()
 
-            connection.release()
-
             const message = "Added book and info to database."
 
             console.log(message)
@@ -46,16 +40,12 @@ const insertBook = async (book: BookObject) => {
 
                 await connection.rollback()
 
-                connection.release()
-
                 console.error(error)
 
                 return reject(error)
 
             }
             catch (error) {
-
-                connection.release()
 
                 console.error(error)
 
@@ -68,7 +58,7 @@ const insertBook = async (book: BookObject) => {
 
 }
 
-const retrieveBooksOfShelves = async (shelves: ShelfObject[]) => {
+const retrieveBooksOfShelves = async (shelves: ShelfObject[], connection: Connection) => {
     
     return new Promise(async (resolve, reject) => {
 
@@ -83,11 +73,7 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[]) => {
             return resolve(books)
         }
 
-        const connection: Connection = new (ConnectionWrapper as any)()
-
-        try {
-
-            await connection.getPoolConnection()
+        try {   
 
             let books: BookObject[] = []
 
@@ -99,15 +85,11 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[]) => {
 
                 const booksWithInfo: BookObject[] = await retrieveAndAppendBookInfo(books, connection)
 
-                connection.release()
-
                 console.log(message(booksWithInfo))
 
                 return resolve(booksWithInfo)
             }
             else {
-
-                connection.release()
 
                 console.log(message(books))
 
@@ -117,8 +99,6 @@ const retrieveBooksOfShelves = async (shelves: ShelfObject[]) => {
 
         }
         catch (error) {
-
-            connection.release()
 
             console.error(error)
 
@@ -154,7 +134,6 @@ const retrieveAndAppendBookInfo = async (books: BookObject[], connection: Connec
 
                         book.info.authors = [bookInfo[i].authors]
                     }
-
 
                     return book
 

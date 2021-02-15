@@ -1,17 +1,13 @@
 import { ClubData, ClubObject, ClubPostObject, MemberData, MemberObject, UserData, UserObject } from "../../../types";
-import ConnectionWrapper, { Connection } from "../database";
+import { Connection } from "../database";
 
-export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
+export const insertClub = async (clubData: ClubPostObject, connection: Connection): Promise<string> => {
     
     return new Promise(async (resolve, reject) => {
 
         console.log("Attempting to insert club: " + clubData.name)
 
-        const connection: Connection = new (ConnectionWrapper as any)()
-
         try {
-
-            await connection.getPoolConnection()
 
             await connection.beginTransaction()
 
@@ -24,8 +20,7 @@ export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
             await connection.query('INSERT INTO ClubMember SET ?', [newClubMember])
 
             await connection.commit()
-
-            connection.release()
+      
 
             const message = "Successfully added club to database."
 
@@ -37,8 +32,6 @@ export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
         catch (error){
 
             await connection.rollback()
-        
-            connection.release()
 
             console.error(error)
 
@@ -50,7 +43,7 @@ export const insertClub = async (clubData: ClubPostObject): Promise<string> => {
 
 }
 
-export const retrieveClubs = (user: UserObject): Promise<ClubObject[]> => {
+export const retrieveClubs = (user: UserObject, connection: Connection): Promise<ClubObject[]> => {
     
     return new Promise(async (resolve, reject) => {
         
@@ -63,12 +56,8 @@ export const retrieveClubs = (user: UserObject): Promise<ClubObject[]> => {
         let memberDataBelongingToClubs: MemberData[] = [] 
 
         let userDataBelongingToMembers: UserData[] = []
-
-        const connection: Connection = new (ConnectionWrapper as any)()
-
+       
         try {
-
-            await connection.getPoolConnection()
 
             await connection.beginTransaction()
 
@@ -98,8 +87,6 @@ export const retrieveClubs = (user: UserObject): Promise<ClubObject[]> => {
 
             await connection.commit()
 
-            connection.release()
-
             console.log(message(clubs))
 
             return resolve(clubs)
@@ -108,8 +95,6 @@ export const retrieveClubs = (user: UserObject): Promise<ClubObject[]> => {
         catch (error) {
 
             await connection.rollback()
-
-            connection.release()
 
             console.error(error)
 

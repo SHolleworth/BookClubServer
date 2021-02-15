@@ -15,6 +15,7 @@ const { insertUser, retrieveUser } = require('./tableInterfaces/userTable')
 
 import { BookObject, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject } from '../../types' 
 import { insertClub, retrieveClubs as retrieveClubsOfUser } from "./tableInterfaces/clubTables"
+import ConnectionWrapper from './database'
 
 fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
@@ -39,10 +40,13 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //Search bar query from client
         socket.on('search_google_books_by_title', async (query: string) => {
 
+
             try {
+
                 const volumeData = await searchGoogleBooksByTitle(query, apiKey)
 
                 socket.emit('google_books_by_title_response', volumeData)
+
             }
             catch (error) {
 
@@ -55,9 +59,13 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //New user registration
         socket.on('register_new_user', async (user: UserRegisterObject) => {
 
+            const connection = new (ConnectionWrapper as any)()
+
             try {
 
-                const message = await insertUser(user)
+                await connection.getPoolConnection()
+
+                const message = await insertUser(user, connection)
 
                 socket.emit('register_new_user_response', message)
 
@@ -68,6 +76,11 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 socket.emit('register_new_user_error', error)
 
             }
+            finally {
+
+                connection.release()
+
+            }
 
         })
 
@@ -76,14 +89,19 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
             let userData: UserLoginDataObject = { user: { id: null, username: null }, shelves: [], books: [], clubs: [] }
 
+            const connection = new (ConnectionWrapper as any)()
+
             try {
-                userData.user = await retrieveUser(user)
 
-                userData.shelves = await retrieveShelvesOfUser(userData.user)
+                await connection.getPoolConnection()
 
-                userData.books = await retrieveBooksOfShelves(userData.shelves)
+                userData.user = await retrieveUser(user, connection)
 
-                userData.clubs = await retrieveClubsOfUser(userData.user)
+                userData.shelves = await retrieveShelvesOfUser(userData.user, connection)
+
+                userData.books = await retrieveBooksOfShelves(userData.shelves, connection)
+
+                userData.clubs = await retrieveClubsOfUser(userData.user, connection)
                 
                 console.log("User logging on: " + userData.user.username)
 
@@ -94,14 +112,23 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 socket.emit('login_as_user_error', error)
 
             }
+            finally {
+
+                connection.release()
+
+            }
         })
 
         //New shelf to add to database
         socket.on('post_new_shelf' , async (shelf: ShelfObject) => {
 
+            const connection = new (ConnectionWrapper as any)()
+
             try {
 
-                const message = await insertShelf(shelf)
+                await connection.getPoolConnection()
+
+                const message = await insertShelf(shelf, connection)
 
                 socket.emit('post_new_shelf_response', message)
 
@@ -111,15 +138,24 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 socket.emit('post_new_shelf_error', error)
 
             }
+            finally {
+
+                connection.release()
+
+            }
 
         })
 
         //Retrieve shelves of user
         socket.on('retrieve_shelves', async (user: UserObject) => {
 
+            const connection = new (ConnectionWrapper as any)()
+
             try {
 
-                const shelves = await retrieveShelvesOfUser(user)
+                await connection.getPoolConnection()
+
+                const shelves = await retrieveShelvesOfUser(user, connection)
 
                 socket.emit('retrieve_shelves_response', shelves)
 
@@ -129,6 +165,11 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 socket.emit('retrieve_shelves_error', error)
 
             }
+            finally {
+
+                connection.release()
+
+            }
 
         })
 
@@ -136,9 +177,13 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //New book to add to database
         socket.on('post_new_book', async (book: BookObject) =>{
 
+            const connection = new (ConnectionWrapper as any)()
+
             try {
 
-                const message = await insertBook(book)
+                await connection.getPoolConnection()
+
+                const message = await insertBook(book, connection)
 
                 socket.emit('post_new_book_response', message)
 
@@ -146,6 +191,11 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
             catch(error){
                 
                 socket.emit('post_new_book_error', error)
+
+            }
+            finally {
+
+                connection.release()
 
             }
 
@@ -156,11 +206,15 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
             const data: {shelves: ShelfObject[], books: BookObject[]} = { shelves: [], books: [] }
 
+            const connection = new (ConnectionWrapper as any)()
+
             try {
 
-                data.shelves = await retrieveShelvesOfUser(user)
+                await connection.getPoolConnection()
 
-                data.books = await retrieveBooksOfShelves(data.shelves)
+                data.shelves = await retrieveShelvesOfUser(user, connection)
+
+                data.books = await retrieveBooksOfShelves(data.shelves, connection)
                 
                 socket.emit('retrieve_books_response', data)
 
@@ -170,15 +224,23 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 socket.emit('retrieve_books_error', error)
                 
             }
+            finally {
+
+                connection.release()
+
+            }
 
         })
 
         //Post new club
         socket.on('post_new_club', async (clubData: ClubPostObject) => {
+            const connection = new (ConnectionWrapper as any)()
 
             try {
 
-                const message = await insertClub(clubData)
+                await connection.getPoolConnection()
+
+                const message = await insertClub(clubData, connection)
 
                 socket.emit('post_new_club_response', message)
 
@@ -186,6 +248,11 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
             catch(error) {
                 
                 socket.emit('post_new_club_error', error)
+
+            }
+            finally {
+
+                connection.release()
 
             }
 
@@ -196,9 +263,13 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
             console.log("Retrieving clubs for user: " + user.id)
 
+            const connection = new (ConnectionWrapper as any)()
+
             try {
 
-                const clubs = await retrieveClubsOfUser(user)
+                await connection.getPoolConnection()
+
+                const clubs = await retrieveClubsOfUser(user, connection)
 
                 socket.emit('retrieve_clubs_response', clubs)
 
@@ -206,6 +277,11 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
             catch(error) {
                 
                 socket.emit('retrieve_clubs_error', error)
+
+            }
+            finally {
+
+                connection.release()
 
             }
             

@@ -1,25 +1,19 @@
 import { ShelfObject, UserObject } from '../../../types'
-import ConnectionWrapper from '../database'
+import { Connection } from '../database'
 
-const insertShelf = async (shelf: ShelfObject) => {
+const insertShelf = async (shelf: ShelfObject, connection: Connection) => {
     
     return new Promise(async (resolve, reject) => {
         
         console.log("Inserting shelf " + shelf.name)
 
-        const connection = new (ConnectionWrapper as any)()
-
         try {
-
-            await connection.getPoolConnection()
 
             const existingShelves = await connection.query('SELECT * FROM Shelf WHERE id = ?', [shelf.id])
 
             if(existingShelves.length) return reject(`Error, shelf with id ${shelf.id} already in database.`)
 
-            await connection.query('INSERT INTO Shelf (name, userId) VALUES (?, ?)', [shelf.name, shelf.userId])
-
-            connection.release()
+            await connection.query('INSERT INTO Shelf (name, userId) VALUES (?, ?)', [shelf.name, shelf.userId])   
 
             const message = "Successfully added shelf to database."
 
@@ -29,8 +23,6 @@ const insertShelf = async (shelf: ShelfObject) => {
 
         }
         catch (error) {
-
-            connection.release()
 
             console.error(error)
 
@@ -42,19 +34,13 @@ const insertShelf = async (shelf: ShelfObject) => {
 
 }
 
-const retrieveShelvesOfUser = async (user: UserObject): Promise<ShelfObject[]> => {
+const retrieveShelvesOfUser = async (user: UserObject, connection: Connection): Promise<ShelfObject[]> => {
     
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve, reject) => {       
 
-        const connection = new (ConnectionWrapper as any)()
-
-        try {
-
-            await connection.getPoolConnection()
+        try {         
 
             const shelves = await connection.query('SELECT * FROM Shelf WHERE userId = ?', [user.id])
-
-            connection.release()
 
             const message = `Retrieved ${shelves.length} shelves of user ${user.username}.`
 
@@ -62,11 +48,8 @@ const retrieveShelvesOfUser = async (user: UserObject): Promise<ShelfObject[]> =
 
             return resolve(shelves)
 
-
         }
-        catch (error) {
-
-            connection.release()
+        catch (error) {   
 
             console.error(error)
 
