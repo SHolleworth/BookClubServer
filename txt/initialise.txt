@@ -63,4 +63,19 @@ CREATE TABLE ClubMember (\
 );
 
 INSERT INTO Club (name) VALUES (?);
+
+ALTER TABLE user ADD socketId VARCHAR(255) DEFAULT null;
+
+UPDATE user SET socketId = ? WHERE id = ?;
+
+CREATE TABLE clubInvite (\
+	id INT NOT NULL AUTO_INCREMENT,\
+	invitedId INT NOT NULL,\
+	inviteeId INT NOT NULL,\
+	clubId INT NOT NULL,\
+	FOREIGN KEY (invitedId) REFERENCES User(id),\
+	FOREIGN KEY (inviteeId) REFERENCES User(id),\
+	FOREIGN KEY (club) REFERENCES Club(id),\
+	PRIMARY KEY (id)\
+);
 	

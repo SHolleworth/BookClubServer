@@ -50,6 +50,7 @@ function default_1() {
                             if (error)
                                 return reject(error);
                             _this.connection = connection;
+                            console.log("Got connection");
                             return resolve(1);
                         });
                     }

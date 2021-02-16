@@ -11,7 +11,7 @@ const { searchGoogleBooksByTitle } = require('./requestHandler')
 const { insertBook, retrieveBooksOfShelves } = require('./tableInterfaces/bookTable')
 const { configureConnectionPool, getPool }= require('./tableInterfaces/connection')
 const { insertShelf, retrieveShelvesOfUser } = require('./tableInterfaces/shelfTable')
-const { insertUser, retrieveUser } = require('./tableInterfaces/userTable')
+const { insertUser, retrieveUser, updateSocketIdOfUser } = require('./tableInterfaces/userTable')
 
 import { BookObject, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject } from '../../types' 
 import { insertClub, retrieveClubs as retrieveClubsOfUser } from "./tableInterfaces/clubTables"
@@ -37,9 +37,33 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
         console.log("Client connected")
 
+        socket.on('update_socket_id', async (userId: number) => {
+
+            const connection = new (ConnectionWrapper as any)()
+            
+            try {
+
+                await connection.getPoolConnection()
+
+                const message = await updateSocketIdOfUser(userId, socket.id, connection)
+
+                socket.emit('update_socket_id_response', message)
+
+            }
+            catch (error) {
+
+                socket.emit('update_socket_id_error', error)
+
+            }
+            finally {
+
+                connection.release()
+
+            }
+        })
+
         //Search bar query from client
         socket.on('search_google_books_by_title', async (query: string) => {
-
 
             try {
 
@@ -102,6 +126,8 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 userData.books = await retrieveBooksOfShelves(userData.shelves, connection)
 
                 userData.clubs = await retrieveClubsOfUser(userData.user, connection)
+
+                await updateSocketIdOfUser(userData.user.id, socket.id, connection)
                 
                 console.log("User logging on: " + userData.user.username)
 

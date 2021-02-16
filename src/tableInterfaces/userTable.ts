@@ -5,6 +5,35 @@ import { Connection } from '../database'
 
 const SALT_ROUNDS = 10
 
+const updateSocketIdOfUser = async (userId: number, socketId: string, connection: Connection) => {
+
+    console.log(`Adding socket ID: ${socketId} to user ID: ${userId}.`)
+
+    return new Promise(async (resolve, reject) => {
+        
+        try {
+
+            await connection.query("UPDATE user SET socketId = ? WHERE id = ?", [socketId, userId])
+
+            const message = "Successfully updated socket ID. New socket ID: " + socketId
+
+            console.log(message)
+
+            return resolve(message)
+
+        }  
+        catch (error) {
+
+            console.error(error)
+
+            return reject(error)
+
+        }
+
+    });
+    
+}
+
 const insertUser = async (user: UserRegisterObject, connection: Connection) => {
 
     console.log("Attempting to insert user: " + user.username)
@@ -169,4 +198,4 @@ export const convertToUserObject = (userData: UserData) => {
 
 }
 
-module.exports = { insertUser, retrieveUser }
+module.exports = { insertUser, retrieveUser, updateSocketIdOfUser }

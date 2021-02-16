@@ -39,11 +39,36 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertToUserObject = void 0;
 var bcrypt = require('bcrypt');
 var SALT_ROUNDS = 10;
+var updateSocketIdOfUser = function (userId, socketId, connection) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        console.log("Adding socket ID: " + socketId + " to user ID: " + userId + ".");
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var message, error_1;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4 /*yield*/, connection.query("UPDATE user SET socketId = ? WHERE id = ?", [socketId, userId])];
+                        case 1:
+                            _a.sent();
+                            message = "Successfully updated socket ID. New socket ID: " + socketId;
+                            console.log(message);
+                            return [2 /*return*/, resolve(message)];
+                        case 2:
+                            error_1 = _a.sent();
+                            console.error(error_1);
+                            return [2 /*return*/, reject(error_1)];
+                        case 3: return [2 /*return*/];
+                    }
+                });
+            }); })];
+    });
+}); };
 var insertUser = function (user, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         console.log("Attempting to insert user: " + user.username);
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var username, password, user_1, _a, hash, salt, message, error_1;
+                var username, password, user_1, _a, hash, salt, message, error_2;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
@@ -66,9 +91,9 @@ var insertUser = function (user, connection) { return __awaiter(void 0, void 0, 
                             console.log("Inserted user: " + user_1.username);
                             return [2 /*return*/, resolve(message)];
                         case 5:
-                            error_1 = _b.sent();
-                            console.error(error_1);
-                            return [2 /*return*/, reject(error_1)];
+                            error_2 = _b.sent();
+                            console.error(error_2);
+                            return [2 /*return*/, reject(error_2)];
                         case 6: return [2 /*return*/];
                     }
                 });
@@ -79,7 +104,7 @@ var retrieveUser = function (userToRetrieve, connection) { return __awaiter(void
     return __generator(this, function (_a) {
         console.log("Attempting to retrieve user: " + userToRetrieve.username);
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var existingUsers_1, error, hash, error_2;
+                var existingUsers_1, error, hash, error_3;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -112,9 +137,9 @@ var retrieveUser = function (userToRetrieve, connection) { return __awaiter(void
                             });
                             return [3 /*break*/, 3];
                         case 2:
-                            error_2 = _a.sent();
-                            console.error(error_2);
-                            return [2 /*return*/, reject(error_2)];
+                            error_3 = _a.sent();
+                            console.error(error_3);
+                            return [2 /*return*/, reject(error_3)];
                         case 3: return [2 /*return*/];
                     }
                 });
@@ -139,7 +164,7 @@ var hashPassword = function (password) { return __awaiter(void 0, void 0, void 0
 var insertUserSQL = function (username, hashedPassword, salt, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var user, message, error_3;
+                var user, message, error_4;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -155,9 +180,9 @@ var insertUserSQL = function (username, hashedPassword, salt, connection) { retu
                             console.log(message);
                             return [2 /*return*/, resolve(message)];
                         case 3:
-                            error_3 = _a.sent();
-                            console.error(error_3);
-                            return [2 /*return*/, reject(error_3)];
+                            error_4 = _a.sent();
+                            console.error(error_4);
+                            return [2 /*return*/, reject(error_4)];
                         case 4: return [2 /*return*/];
                     }
                 });
@@ -167,4 +192,4 @@ var insertUserSQL = function (username, hashedPassword, salt, connection) { retu
 exports.convertToUserObject = function (userData) {
     return { id: userData.id, username: userData.username };
 };
-module.exports = { insertUser: insertUser, retrieveUser: retrieveUser };
+module.exports = { insertUser: insertUser, retrieveUser: retrieveUser, updateSocketIdOfUser: updateSocketIdOfUser };
