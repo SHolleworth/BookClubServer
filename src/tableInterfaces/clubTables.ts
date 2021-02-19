@@ -20,7 +20,6 @@ export const insertClub = async (clubData: ClubPostObject, connection: Connectio
             await connection.query('INSERT INTO ClubMember SET ?', [newClubMember])
 
             await connection.commit()
-      
 
             const message = "Successfully added club to database."
 
@@ -31,11 +30,22 @@ export const insertClub = async (clubData: ClubPostObject, connection: Connectio
         }
         catch (error){
 
-            await connection.rollback()
+            try {
 
-            console.error(error)
+                await connection.rollback()
 
-            return reject(error)
+                console.error(error)
+
+                return reject(error)
+
+            }
+            catch (error) {
+
+                console.error(error)
+
+                return reject(error)
+
+            }
 
         }
        
@@ -63,17 +73,19 @@ export const retrieveClubs = (user: UserObject, connection: Connection): Promise
 
             const memberDataOfUser =  await connection.query('SELECT * FROM ClubMember WHERE userId = ?', [user.id])
 
-            const clubIdsOfUser = memberDataOfUser.map((memberData: MemberData) => memberData.clubId) 
+            const clubIdsOfUser = memberDataOfUser.map((memberData: MemberData) => memberData.clubId)
 
-            clubDataBelongingToUser = await connection.query('SELECT * FROM Club WHERE id IN (?)', [clubIdsOfUser])
-
-            if(clubDataBelongingToUser.length < 1) {
+            if(clubIdsOfUser.length < 1) {
 
                 console.log(message([]))
+
+                await connection.commit()
 
                 return resolve([])
 
             }
+
+            clubDataBelongingToUser = await connection.query('SELECT * FROM Club WHERE id IN (?)', [clubIdsOfUser])
 
             const clubIds = clubDataBelongingToUser.map((clubData: ClubData) => clubData.id)
 

@@ -13,6 +13,16 @@ const updateSocketIdOfUser = async (userId: number, socketId: string, connection
         
         try {
 
+            if(!userId) {
+
+                const error = "Null user Id on socket Id update."
+
+                console.error(error)
+
+                return reject (error)
+                
+            }
+
             await connection.query("UPDATE user SET socketId = ? WHERE id = ?", [socketId, userId])
 
             const message = "Successfully updated socket ID. New socket ID: " + socketId
@@ -138,7 +148,44 @@ const retrieveUser = async (userToRetrieve: UserLoginObject, connection: Connect
 
     })
 
+}
 
+const retrieveUserIdAndSocketIdByUsername = async (username: string, connection: Connection) => {
+
+    console.log("Attempting to retrieve user Id and socket Id of : " + username)
+    
+    return new Promise(async (resolve, reject) => {
+        
+        try {
+
+            const user = await connection.query("SELECT * FROM User WHERE username = ?", [username])
+
+            if(user.length < 1) {
+
+                return reject("Username not found.")
+
+            }
+            if(user.length > 1) {
+
+                return reject(`Error, more than one user with username ${username} found, aborting.`)
+
+            }
+
+            const data = { id: user[0].id, socketId: user[0].socketId }
+
+            return resolve(data)
+
+        }
+        catch (error) {            
+
+            console.error(error)
+
+            return reject(error)
+
+        }
+
+    })
+    
 }
 
 const hashPassword = async (password: string): Promise<{ hash: string, salt: string}>=> {
@@ -198,4 +245,4 @@ export const convertToUserObject = (userData: UserData) => {
 
 }
 
-module.exports = { insertUser, retrieveUser, updateSocketIdOfUser }
+module.exports = { insertUser, retrieveUser, updateSocketIdOfUser, retrieveUserIdAndSocketIdByUsername }

@@ -49,7 +49,8 @@ var searchGoogleBooksByTitle = require('./requestHandler').searchGoogleBooksByTi
 var _a = require('./tableInterfaces/bookTable'), insertBook = _a.insertBook, retrieveBooksOfShelves = _a.retrieveBooksOfShelves;
 var _b = require('./tableInterfaces/connection'), configureConnectionPool = _b.configureConnectionPool, getPool = _b.getPool;
 var _c = require('./tableInterfaces/shelfTable'), insertShelf = _c.insertShelf, retrieveShelvesOfUser = _c.retrieveShelvesOfUser;
-var _d = require('./tableInterfaces/userTable'), insertUser = _d.insertUser, retrieveUser = _d.retrieveUser, updateSocketIdOfUser = _d.updateSocketIdOfUser;
+var _d = require('./tableInterfaces/userTable'), insertUser = _d.insertUser, retrieveUser = _d.retrieveUser, retrieveUserIdAndSocketIdByUsername = _d.retrieveUserIdAndSocketIdByUsername, updateSocketIdOfUser = _d.updateSocketIdOfUser;
+var insertInvite = require('./tableInterfaces/inviteTable').insertInvite;
 var clubTables_1 = require("./tableInterfaces/clubTables");
 var database_1 = __importDefault(require("./database"));
 fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
@@ -365,6 +366,45 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         connection.release();
                         return [7 /*endfinally*/];
                     case 6: return [2 /*return*/];
+                }
+            });
+        }); });
+        //Send club invite to username
+        socket.on('send_club_invite', function (invite) { return __awaiter(void 0, void 0, void 0, function () {
+            var invitedUsername, inviter, club, connection, _a, id, socketId, inviteData, inviteId, inviteToSend, error_11;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        invitedUsername = invite.invitedUsername, inviter = invite.inviter, club = invite.club;
+                        console.log("Processing club invitation to club: " + club.name + ", sent from " + inviter.username + " to " + invitedUsername + ".");
+                        connection = new database_1.default();
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 5, 6, 7]);
+                        return [4 /*yield*/, connection.getPoolConnection()];
+                    case 2:
+                        _b.sent();
+                        return [4 /*yield*/, retrieveUserIdAndSocketIdByUsername(invitedUsername, connection)];
+                    case 3:
+                        _a = _b.sent(), id = _a.id, socketId = _a.socketId;
+                        inviteData = { invitedId: id, inviterId: inviter.id, clubId: club.id };
+                        return [4 /*yield*/, insertInvite(inviteData, connection)];
+                    case 4:
+                        inviteId = _b.sent();
+                        inviteToSend = { inviter: inviter, club: club, inviteId: inviteId };
+                        console.log("Sending invite to socket Id " + socketId);
+                        io.to(socketId).emit('receiving_club_invite', inviteToSend);
+                        socket.emit('send_club_invite_response', "Invite sent.");
+                        return [3 /*break*/, 7];
+                    case 5:
+                        error_11 = _b.sent();
+                        console.error(error_11);
+                        socket.emit('send_club_invite_error', error_11);
+                        return [3 /*break*/, 7];
+                    case 6:
+                        connection.release();
+                        return [7 /*endfinally*/];
+                    case 7: return [2 /*return*/];
                 }
             });
         }); });

@@ -58,14 +58,14 @@ exports.retrieveClubs = exports.insertClub = void 0;
 exports.insertClub = function (clubData, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var insertedClubRow, clubId, newClubMember, message, error_1;
+                var insertedClubRow, clubId, newClubMember, message, error_1, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             console.log("Attempting to insert club: " + clubData.name);
                             _a.label = 1;
                         case 1:
-                            _a.trys.push([1, 6, , 8]);
+                            _a.trys.push([1, 6, , 11]);
                             return [4 /*yield*/, connection.beginTransaction()];
                         case 2:
                             _a.sent();
@@ -85,12 +85,20 @@ exports.insertClub = function (clubData, connection) { return __awaiter(void 0, 
                             return [2 /*return*/, resolve(message)];
                         case 6:
                             error_1 = _a.sent();
-                            return [4 /*yield*/, connection.rollback()];
+                            _a.label = 7;
                         case 7:
+                            _a.trys.push([7, 9, , 10]);
+                            return [4 /*yield*/, connection.rollback()];
+                        case 8:
                             _a.sent();
                             console.error(error_1);
                             return [2 /*return*/, reject(error_1)];
-                        case 8: return [2 /*return*/];
+                        case 9:
+                            error_2 = _a.sent();
+                            console.error(error_2);
+                            return [2 /*return*/, reject(error_2)];
+                        case 10: return [3 /*break*/, 11];
+                        case 11: return [2 /*return*/];
                     }
                 });
             }); })];
@@ -98,7 +106,7 @@ exports.insertClub = function (clubData, connection) { return __awaiter(void 0, 
 }); };
 exports.retrieveClubs = function (user, connection) {
     return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-        var message, clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, memberDataOfUser, clubIdsOfUser, clubIds, memberIds, clubs, error_2;
+        var message, clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, memberDataOfUser, clubIdsOfUser, clubIds, memberIds, clubs, error_3;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -109,7 +117,7 @@ exports.retrieveClubs = function (user, connection) {
                     userDataBelongingToMembers = [];
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 8, , 10]);
+                    _a.trys.push([1, 10, , 12]);
                     return [4 /*yield*/, connection.beginTransaction()];
                 case 2:
                     _a.sent();
@@ -117,35 +125,37 @@ exports.retrieveClubs = function (user, connection) {
                 case 3:
                     memberDataOfUser = _a.sent();
                     clubIdsOfUser = memberDataOfUser.map(function (memberData) { return memberData.clubId; });
-                    return [4 /*yield*/, connection.query('SELECT * FROM Club WHERE id IN (?)', [clubIdsOfUser])];
+                    if (!(clubIdsOfUser.length < 1)) return [3 /*break*/, 5];
+                    console.log(message([]));
+                    return [4 /*yield*/, connection.commit()];
                 case 4:
+                    _a.sent();
+                    return [2 /*return*/, resolve([])];
+                case 5: return [4 /*yield*/, connection.query('SELECT * FROM Club WHERE id IN (?)', [clubIdsOfUser])];
+                case 6:
                     clubDataBelongingToUser = _a.sent();
-                    if (clubDataBelongingToUser.length < 1) {
-                        console.log(message([]));
-                        return [2 /*return*/, resolve([])];
-                    }
                     clubIds = clubDataBelongingToUser.map(function (clubData) { return clubData.id; });
                     return [4 /*yield*/, connection.query('SELECT * FROM ClubMember WHERE clubId IN (?)', [clubIds])];
-                case 5:
+                case 7:
                     memberDataBelongingToClubs = _a.sent();
                     memberIds = memberDataBelongingToClubs.map(function (memberData) { return memberData.userId; });
                     return [4 /*yield*/, connection.query('SELECT * FROM User WHERE id IN (?)', [memberIds])];
-                case 6:
+                case 8:
                     userDataBelongingToMembers = _a.sent();
                     clubs = formatClubObjects(clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers);
                     return [4 /*yield*/, connection.commit()];
-                case 7:
+                case 9:
                     _a.sent();
                     console.log(message(clubs));
                     return [2 /*return*/, resolve(clubs)];
-                case 8:
-                    error_2 = _a.sent();
+                case 10:
+                    error_3 = _a.sent();
                     return [4 /*yield*/, connection.rollback()];
-                case 9:
+                case 11:
                     _a.sent();
-                    console.error(error_2);
-                    return [2 /*return*/, reject(error_2)];
-                case 10: return [2 /*return*/];
+                    console.error(error_3);
+                    return [2 /*return*/, reject(error_3)];
+                case 12: return [2 /*return*/];
             }
         });
     }); });

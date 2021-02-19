@@ -11,9 +11,10 @@ const { searchGoogleBooksByTitle } = require('./requestHandler')
 const { insertBook, retrieveBooksOfShelves } = require('./tableInterfaces/bookTable')
 const { configureConnectionPool, getPool }= require('./tableInterfaces/connection')
 const { insertShelf, retrieveShelvesOfUser } = require('./tableInterfaces/shelfTable')
-const { insertUser, retrieveUser, updateSocketIdOfUser } = require('./tableInterfaces/userTable')
+const { insertUser, retrieveUser, retrieveUserIdAndSocketIdByUsername, updateSocketIdOfUser } = require('./tableInterfaces/userTable')
+const { insertInvite } = require('./tableInterfaces/inviteTable')
 
-import { BookObject, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject } from '../../types' 
+import { BookObject, ClubInvitePost, ClubInviteData, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject, ClubInviteReceive } from '../../types' 
 import { insertClub, retrieveClubs as retrieveClubsOfUser } from "./tableInterfaces/clubTables"
 import ConnectionWrapper from './database'
 
@@ -61,6 +62,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
             }
         })
+
 
         //Search bar query from client
         socket.on('search_google_books_by_title', async (query: string) => {
@@ -303,6 +305,50 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
             catch(error) {
                 
                 socket.emit('retrieve_clubs_error', error)
+
+            }
+            finally {
+
+                connection.release()
+
+            }
+            
+        })
+
+
+        //Send club invite to username
+        socket.on('send_club_invite', async (invite: ClubInvitePost) => {
+
+            const { invitedUsername, inviter, club } = invite
+
+            console.log(`Processing club invitation to club: ${club.name}, sent from ${inviter.username} to ${invitedUsername}.`)
+
+            const connection = new (ConnectionWrapper as any)()
+
+            try {
+
+                await connection.getPoolConnection()
+
+                const { id, socketId } = await retrieveUserIdAndSocketIdByUsername(invitedUsername, connection) 
+
+                const inviteData: ClubInviteData = { invitedId: id, inviterId: inviter.id, clubId: club.id }
+
+                const inviteId = await insertInvite(inviteData, connection)
+
+                const inviteToSend: ClubInviteReceive = { inviter, club, inviteId }
+
+                console.log("Sending invite to socket Id " + socketId)
+
+                io.to(socketId).emit('receiving_club_invite', inviteToSend)
+
+                socket.emit('send_club_invite_response', "Invite sent.")
+
+            }
+            catch(error) {
+
+                console.error(error)
+                
+                socket.emit('send_club_invite_error', error)
 
             }
             finally {

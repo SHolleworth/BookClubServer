@@ -43,11 +43,16 @@ var updateSocketIdOfUser = function (userId, socketId, connection) { return __aw
     return __generator(this, function (_a) {
         console.log("Adding socket ID: " + socketId + " to user ID: " + userId + ".");
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var message, error_1;
+                var error, message, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             _a.trys.push([0, 2, , 3]);
+                            if (!userId) {
+                                error = "Null user Id on socket Id update.";
+                                console.error(error);
+                                return [2 /*return*/, reject(error)];
+                            }
                             return [4 /*yield*/, connection.query("UPDATE user SET socketId = ? WHERE id = ?", [socketId, userId])];
                         case 1:
                             _a.sent();
@@ -146,6 +151,36 @@ var retrieveUser = function (userToRetrieve, connection) { return __awaiter(void
             }); })];
     });
 }); };
+var retrieveUserIdAndSocketIdByUsername = function (username, connection) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        console.log("Attempting to retrieve user Id and socket Id of : " + username);
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var user, data, error_4;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4 /*yield*/, connection.query("SELECT * FROM User WHERE username = ?", [username])];
+                        case 1:
+                            user = _a.sent();
+                            if (user.length < 1) {
+                                return [2 /*return*/, reject("Username not found.")];
+                            }
+                            if (user.length > 1) {
+                                return [2 /*return*/, reject("Error, more than one user with username " + username + " found, aborting.")];
+                            }
+                            data = { id: user[0].id, socketId: user[0].socketId };
+                            return [2 /*return*/, resolve(data)];
+                        case 2:
+                            error_4 = _a.sent();
+                            console.error(error_4);
+                            return [2 /*return*/, reject(error_4)];
+                        case 3: return [2 /*return*/];
+                    }
+                });
+            }); })];
+    });
+}); };
 var hashPassword = function (password) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) {
@@ -164,7 +199,7 @@ var hashPassword = function (password) { return __awaiter(void 0, void 0, void 0
 var insertUserSQL = function (username, hashedPassword, salt, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var user, message, error_4;
+                var user, message, error_5;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -180,9 +215,9 @@ var insertUserSQL = function (username, hashedPassword, salt, connection) { retu
                             console.log(message);
                             return [2 /*return*/, resolve(message)];
                         case 3:
-                            error_4 = _a.sent();
-                            console.error(error_4);
-                            return [2 /*return*/, reject(error_4)];
+                            error_5 = _a.sent();
+                            console.error(error_5);
+                            return [2 /*return*/, reject(error_5)];
                         case 4: return [2 /*return*/];
                     }
                 });
@@ -192,4 +227,4 @@ var insertUserSQL = function (username, hashedPassword, salt, connection) { retu
 exports.convertToUserObject = function (userData) {
     return { id: userData.id, username: userData.username };
 };
-module.exports = { insertUser: insertUser, retrieveUser: retrieveUser, updateSocketIdOfUser: updateSocketIdOfUser };
+module.exports = { insertUser: insertUser, retrieveUser: retrieveUser, updateSocketIdOfUser: updateSocketIdOfUser, retrieveUserIdAndSocketIdByUsername: retrieveUserIdAndSocketIdByUsername };

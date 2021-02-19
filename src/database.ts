@@ -7,7 +7,7 @@ export interface Connection {
     release: () => void;
     connection: PoolConnection | null
     getPoolConnection: () => Promise<any>
-    query(sql: string, args: any[]): Promise<any>
+    query(sql: string, args: any[]): any
     beginTransaction: () => Promise<any>
     commit: () => Promise<any>
 }
@@ -52,13 +52,13 @@ export default function (this: Connection) {
 
 
     
-    this.query = async (sql: string, args: any[]): Promise<any> => {
+    this.query = async (sql: string, args: any[]) => {
 
         return new Promise((resolve, reject) => {
 
             if(this.connection) {
 
-                this.connection.query(sql, args, (error: MysqlError | null, results: any) => {
+                this.connection.query(sql, args, (error: MysqlError | null, results: any[]) => {
 
                     if (error) return reject(error)
 
