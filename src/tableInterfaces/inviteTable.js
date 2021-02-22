@@ -67,4 +67,84 @@ var insertInvite = function (invite, connection) { return __awaiter(void 0, void
             }); })];
     });
 }); };
-module.exports = { insertInvite: insertInvite };
+var retrieveInvitesOfUser = function (user, connection) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        console.log("Retrieving invites of user " + user.username + ".");
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var inviteData, invites, error_2;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 3, , 4]);
+                            return [4 /*yield*/, connection.query("SELECT * FROM clubinvite WHERE invitedId = ?", [user.id])];
+                        case 1:
+                            inviteData = _a.sent();
+                            return [4 /*yield*/, Promise.all(inviteData.map(function (data) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+                                    return [2 /*return*/, retrieveInvite(data, connection)];
+                                }); }); }))];
+                        case 2:
+                            invites = _a.sent();
+                            console.log("Retrieved " + invites.length + " invites.");
+                            return [2 /*return*/, resolve(invites)];
+                        case 3:
+                            error_2 = _a.sent();
+                            console.error(error_2);
+                            return [2 /*return*/, reject(error_2)];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            }); })];
+    });
+}); };
+var retrieveInvite = function (inviteData, connection) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var inviteId, userData, inviter, club, invite, error_3;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 3, , 4]);
+                            inviteId = inviteData.id;
+                            return [4 /*yield*/, connection.query("SELECT * FROM user WHERE id = ?", [inviteData.inviterId])];
+                        case 1:
+                            userData = _a.sent();
+                            inviter = { id: userData[0].id, username: userData[0].username };
+                            return [4 /*yield*/, connection.query("SELECT * FROM club WHERE id = ?", [inviteData.clubId])];
+                        case 2:
+                            club = _a.sent();
+                            invite = { inviteId: inviteId, inviter: inviter, club: club[0] };
+                            console.log("Retrieved invite to club " + invite.club.name + " from " + invite.inviter.username + ".");
+                            return [2 /*return*/, resolve(invite)];
+                        case 3:
+                            error_3 = _a.sent();
+                            console.error(error_3);
+                            return [2 /*return*/, reject(error_3)];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            }); })];
+    });
+}); };
+var deleteInvite = function (invite, connection) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var error_4;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4 /*yield*/, connection.query("DELETE FROM clubinvite WHERE id = ?", [invite.inviteId])];
+                        case 1:
+                            _a.sent();
+                            return [2 /*return*/, resolve("Invite deleted.")];
+                        case 2:
+                            error_4 = _a.sent();
+                            console.error(error_4);
+                            return [2 /*return*/, reject(error_4)];
+                        case 3: return [2 /*return*/];
+                    }
+                });
+            }); })];
+    });
+}); };
+module.exports = { insertInvite: insertInvite, retrieveInvitesOfUser: retrieveInvitesOfUser, deleteInvite: deleteInvite };

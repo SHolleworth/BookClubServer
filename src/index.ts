@@ -12,10 +12,10 @@ const { insertBook, retrieveBooksOfShelves } = require('./tableInterfaces/bookTa
 const { configureConnectionPool, getPool }= require('./tableInterfaces/connection')
 const { insertShelf, retrieveShelvesOfUser } = require('./tableInterfaces/shelfTable')
 const { insertUser, retrieveUser, retrieveUserIdAndSocketIdByUsername, updateSocketIdOfUser } = require('./tableInterfaces/userTable')
-const { insertInvite } = require('./tableInterfaces/inviteTable')
+const { insertInvite, retrieveInvitesOfUser, deleteInvite } = require('./tableInterfaces/inviteTable')
 
-import { BookObject, ClubInvitePost, ClubInviteData, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject, ClubInviteReceive } from '../../types' 
-import { insertClub, retrieveClubs as retrieveClubsOfUser } from "./tableInterfaces/clubTables"
+import { BookObject, ClubInvitePost, ClubInviteData, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject, ClubInviteReceive, MemberData, AcceptClubInviteObject } from '../../types' 
+import { insertClub, insertClubMember, retrieveClubs as retrieveClubsOfUser } from "./tableInterfaces/clubTables"
 import ConnectionWrapper from './database'
 
 fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
@@ -113,7 +113,13 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
         //User login request
         socket.on('login_as_user', async (user: UserLoginObject) =>{
 
-            let userData: UserLoginDataObject = { user: { id: null, username: null }, shelves: [], books: [], clubs: [] }
+            let userData: UserLoginDataObject = { 
+                user: { id: null, username: null }, 
+                shelves: [], 
+                books: [], 
+                clubs: [],
+                invites: []
+            }
 
             const connection = new (ConnectionWrapper as any)()
 
@@ -128,6 +134,8 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 userData.books = await retrieveBooksOfShelves(userData.shelves, connection)
 
                 userData.clubs = await retrieveClubsOfUser(userData.user, connection)
+
+                userData.invites = await retrieveInvitesOfUser(userData.user, connection)
 
                 await updateSocketIdOfUser(userData.user.id, socket.id, connection)
                 
@@ -331,7 +339,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
                 const { id, socketId } = await retrieveUserIdAndSocketIdByUsername(invitedUsername, connection) 
 
-                const inviteData: ClubInviteData = { invitedId: id, inviterId: inviter.id, clubId: club.id }
+                const inviteData: ClubInviteData = { id: null, invitedId: id, inviterId: inviter.id, clubId: club.id }
 
                 const inviteId = await insertInvite(inviteData, connection)
 
@@ -349,6 +357,105 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 console.error(error)
                 
                 socket.emit('send_club_invite_error', error)
+
+            }
+            finally {
+
+                connection.release()
+
+            }
+            
+        })
+
+        socket.on('retrieve_club_invites', async (user: UserObject) => {
+
+            console.log(`Retrieving invites of ${user.username}.`)
+
+            const connection = new (ConnectionWrapper as any)()
+
+            try {
+
+                await connection.getPoolConnection()
+
+                const invites = await retrieveInvitesOfUser(user, connection)
+
+                console.log('Retrieved invites.')
+
+                socket.emit('retrieve_club_invites_response', invites)
+
+            }
+            catch(error) {
+
+                console.error(error)
+                
+                socket.emit('retrieve_club_invites_error', error)
+
+            }
+            finally {
+
+                connection.release()
+
+            }
+            
+        })
+
+
+        socket.on('delete_club_invite', async (invite: ClubInviteReceive) => {
+
+            console.log(`Deleting invite ${invite.inviteId}.`)
+
+            const connection = new (ConnectionWrapper as any)()
+
+            try {
+
+                await connection.getPoolConnection()
+
+                const message = await deleteInvite(invite, connection)
+
+                console.log(message)
+
+                socket.emit('delete_club_invite_response', message)
+
+            }
+            catch(error) {
+
+                console.error(error)
+                
+                socket.emit('delete_club_invite_error', error)
+
+            }
+            finally {
+
+                connection.release()
+
+            }
+            
+        })
+
+
+        //Add a club member
+        socket.on('post_club_member', async (payload: AcceptClubInviteObject) => {
+
+            const { userId, clubId } = payload.memberData
+
+            console.log(`Adding user: ${userId} to club: ${clubId}.`)
+
+            const connection = new (ConnectionWrapper as any)()
+
+            try {
+
+                await connection.getPoolConnection()
+
+                const message = await insertClubMember(payload, connection)
+
+                socket.emit('post_club_member_response', message)
+
+            }
+            catch(error) {
+
+                console.error(error)
+                
+                socket.emit('post_club_member_error', error)
 
             }
             finally {

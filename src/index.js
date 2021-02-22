@@ -50,7 +50,7 @@ var _a = require('./tableInterfaces/bookTable'), insertBook = _a.insertBook, ret
 var _b = require('./tableInterfaces/connection'), configureConnectionPool = _b.configureConnectionPool, getPool = _b.getPool;
 var _c = require('./tableInterfaces/shelfTable'), insertShelf = _c.insertShelf, retrieveShelvesOfUser = _c.retrieveShelvesOfUser;
 var _d = require('./tableInterfaces/userTable'), insertUser = _d.insertUser, retrieveUser = _d.retrieveUser, retrieveUserIdAndSocketIdByUsername = _d.retrieveUserIdAndSocketIdByUsername, updateSocketIdOfUser = _d.updateSocketIdOfUser;
-var insertInvite = require('./tableInterfaces/inviteTable').insertInvite;
+var _e = require('./tableInterfaces/inviteTable'), insertInvite = _e.insertInvite, retrieveInvitesOfUser = _e.retrieveInvitesOfUser, deleteInvite = _e.deleteInvite;
 var clubTables_1 = require("./tableInterfaces/clubTables");
 var database_1 = __importDefault(require("./database"));
 fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
@@ -143,48 +143,58 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         }); });
         //User login request
         socket.on('login_as_user', function (user) { return __awaiter(void 0, void 0, void 0, function () {
-            var userData, connection, _a, _b, _c, _d, error_4;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var userData, connection, _a, _b, _c, _d, _e, error_4;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0:
-                        userData = { user: { id: null, username: null }, shelves: [], books: [], clubs: [] };
+                        userData = {
+                            user: { id: null, username: null },
+                            shelves: [],
+                            books: [],
+                            clubs: [],
+                            invites: []
+                        };
                         connection = new database_1.default();
-                        _e.label = 1;
+                        _f.label = 1;
                     case 1:
-                        _e.trys.push([1, 8, 9, 10]);
+                        _f.trys.push([1, 9, 10, 11]);
                         return [4 /*yield*/, connection.getPoolConnection()];
                     case 2:
-                        _e.sent();
+                        _f.sent();
                         _a = userData;
                         return [4 /*yield*/, retrieveUser(user, connection)];
                     case 3:
-                        _a.user = _e.sent();
+                        _a.user = _f.sent();
                         _b = userData;
                         return [4 /*yield*/, retrieveShelvesOfUser(userData.user, connection)];
                     case 4:
-                        _b.shelves = _e.sent();
+                        _b.shelves = _f.sent();
                         _c = userData;
                         return [4 /*yield*/, retrieveBooksOfShelves(userData.shelves, connection)];
                     case 5:
-                        _c.books = _e.sent();
+                        _c.books = _f.sent();
                         _d = userData;
                         return [4 /*yield*/, clubTables_1.retrieveClubs(userData.user, connection)];
                     case 6:
-                        _d.clubs = _e.sent();
-                        return [4 /*yield*/, updateSocketIdOfUser(userData.user.id, socket.id, connection)];
+                        _d.clubs = _f.sent();
+                        _e = userData;
+                        return [4 /*yield*/, retrieveInvitesOfUser(userData.user, connection)];
                     case 7:
-                        _e.sent();
+                        _e.invites = _f.sent();
+                        return [4 /*yield*/, updateSocketIdOfUser(userData.user.id, socket.id, connection)];
+                    case 8:
+                        _f.sent();
                         console.log("User logging on: " + userData.user.username);
                         socket.emit('login_as_user_response', userData);
-                        return [3 /*break*/, 10];
-                    case 8:
-                        error_4 = _e.sent();
-                        socket.emit('login_as_user_error', error_4);
-                        return [3 /*break*/, 10];
+                        return [3 /*break*/, 11];
                     case 9:
+                        error_4 = _f.sent();
+                        socket.emit('login_as_user_error', error_4);
+                        return [3 /*break*/, 11];
+                    case 10:
                         connection.release();
                         return [7 /*endfinally*/];
-                    case 10: return [2 /*return*/];
+                    case 11: return [2 /*return*/];
                 }
             });
         }); });
@@ -387,7 +397,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         return [4 /*yield*/, retrieveUserIdAndSocketIdByUsername(invitedUsername, connection)];
                     case 3:
                         _a = _b.sent(), id = _a.id, socketId = _a.socketId;
-                        inviteData = { invitedId: id, inviterId: inviter.id, clubId: club.id };
+                        inviteData = { id: null, invitedId: id, inviterId: inviter.id, clubId: club.id };
                         return [4 /*yield*/, insertInvite(inviteData, connection)];
                     case 4:
                         inviteId = _b.sent();
@@ -405,6 +415,100 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         connection.release();
                         return [7 /*endfinally*/];
                     case 7: return [2 /*return*/];
+                }
+            });
+        }); });
+        socket.on('retrieve_club_invites', function (user) { return __awaiter(void 0, void 0, void 0, function () {
+            var connection, invites, error_12;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        console.log("Retrieving invites of " + user.username + ".");
+                        connection = new database_1.default();
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 4, 5, 6]);
+                        return [4 /*yield*/, connection.getPoolConnection()];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, retrieveInvitesOfUser(user, connection)];
+                    case 3:
+                        invites = _a.sent();
+                        console.log('Retrieved invites.');
+                        socket.emit('retrieve_club_invites_response', invites);
+                        return [3 /*break*/, 6];
+                    case 4:
+                        error_12 = _a.sent();
+                        console.error(error_12);
+                        socket.emit('retrieve_club_invites_error', error_12);
+                        return [3 /*break*/, 6];
+                    case 5:
+                        connection.release();
+                        return [7 /*endfinally*/];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        }); });
+        socket.on('delete_club_invite', function (invite) { return __awaiter(void 0, void 0, void 0, function () {
+            var connection, message, error_13;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        console.log("Deleting invite " + invite.inviteId + ".");
+                        connection = new database_1.default();
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 4, 5, 6]);
+                        return [4 /*yield*/, connection.getPoolConnection()];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, deleteInvite(invite, connection)];
+                    case 3:
+                        message = _a.sent();
+                        console.log(message);
+                        socket.emit('delete_club_invite_response', message);
+                        return [3 /*break*/, 6];
+                    case 4:
+                        error_13 = _a.sent();
+                        console.error(error_13);
+                        socket.emit('delete_club_invite_error', error_13);
+                        return [3 /*break*/, 6];
+                    case 5:
+                        connection.release();
+                        return [7 /*endfinally*/];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        }); });
+        //Add a club member
+        socket.on('post_club_member', function (payload) { return __awaiter(void 0, void 0, void 0, function () {
+            var _a, userId, clubId, connection, message, error_14;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _a = payload.memberData, userId = _a.userId, clubId = _a.clubId;
+                        console.log("Adding user: " + userId + " to club: " + clubId + ".");
+                        connection = new database_1.default();
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 4, 5, 6]);
+                        return [4 /*yield*/, connection.getPoolConnection()];
+                    case 2:
+                        _b.sent();
+                        return [4 /*yield*/, clubTables_1.insertClubMember(payload, connection)];
+                    case 3:
+                        message = _b.sent();
+                        socket.emit('post_club_member_response', message);
+                        return [3 /*break*/, 6];
+                    case 4:
+                        error_14 = _b.sent();
+                        console.error(error_14);
+                        socket.emit('post_club_member_error', error_14);
+                        return [3 /*break*/, 6];
+                    case 5:
+                        connection.release();
+                        return [7 /*endfinally*/];
+                    case 6: return [2 /*return*/];
                 }
             });
         }); });

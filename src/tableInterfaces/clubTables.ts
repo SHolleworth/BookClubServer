@@ -1,4 +1,4 @@
-import { ClubData, ClubObject, ClubPostObject, MemberData, MemberObject, UserData, UserObject } from "../../../types";
+import { AcceptClubInviteObject, ClubData, ClubObject, ClubPostObject, MemberData, MemberObject, UserData, UserObject } from "../../../types";
 import { Connection } from "../database";
 
 export const insertClub = async (clubData: ClubPostObject, connection: Connection): Promise<string> => {
@@ -115,6 +115,60 @@ export const retrieveClubs = (user: UserObject, connection: Connection): Promise
 
     });
 
+}
+
+export const insertClubMember = (payload: AcceptClubInviteObject, connection: Connection) => {
+
+    return new Promise(async (resolve, reject) => {
+       
+        const { clubId, userId } = payload.memberData
+
+        try {
+
+            await connection.beginTransaction()
+
+            const exisitingMembers =  await connection.query("SELECT * FROM clubMember WHERE clubId = ? AND userID = ?", [clubId, userId])
+
+            if(exisitingMembers.length) {
+
+                await connection.rollback()
+
+                const error = "Error, member data already exists in database."
+
+                console.error(error)
+
+                return reject(error)
+
+            }
+
+            const newMember = { clubId, userId, admin: false }
+
+            await connection.query("INSERT INTO clubMember SET ?", [newMember])
+
+            const message = `Successfully added user: ${userId} to club ${clubId}.`
+
+            console.log(message)
+
+            console.log(`Deleting invite ${payload.inviteId}`)
+
+            await connection.query("DELETE FROM clubinvite WHERE id = ?", [payload.inviteId])
+
+            await connection.commit()
+
+            return resolve(message)
+
+        }
+        catch (error) {
+
+            await connection.rollback()
+
+            console.error(error)
+
+            return reject(error)
+        }
+
+    });
+    
 }
 
 const formatClubObjects = (clubDataSet: ClubData[], memberDataSet: MemberData[], userDataSet: UserData[]) => {

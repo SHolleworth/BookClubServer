@@ -1,0 +1,43 @@
+Date : 2021-02-22 14:02:43
+Directory : c:\Users\samho\Documents\Uni\Project\BookClubServer\src
+Total : 17 files,  2348 codes, 22 comments, 701 blanks, all 3071 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| JavaScript |          9 |      1,565 |         11 |         20 |      1,596 |
+| TypeScript |          8 |        783 |         11 |        681 |      1,475 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                   | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                      |         17 |      2,348 |         22 |        701 |      3,071 |
+| tableInterfaces                                                                        |         12 |      1,351 |          0 |        393 |      1,744 |
++----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                               | language   | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\database.js                    | JavaScript |        136 |          0 |          1 |        137 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\database.ts                    | TypeScript |         88 |          0 |         86 |        174 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\index.js                       | JavaScript |        505 |         11 |          1 |        517 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\index.ts                       | TypeScript |        252 |         11 |        208 |        471 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\requestHandler.js              | JavaScript |         16 |          0 |         12 |         28 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\bookTable.js   | JavaScript |        179 |          0 |          1 |        180 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\bookTable.ts   | TypeScript |         83 |          0 |         70 |        153 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\clubTables.js  | JavaScript |        228 |          0 |          1 |        229 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\clubTables.ts  | TypeScript |        106 |          0 |         98 |        204 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\connection.js  | JavaScript |         26 |          0 |          1 |         27 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\connection.ts  | TypeScript |         23 |          0 |         12 |         35 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\inviteTable.js | JavaScript |        150 |          0 |          1 |        151 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\inviteTable.ts | TypeScript |         67 |          0 |         59 |        126 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\shelfTable.js  | JavaScript |         95 |          0 |          1 |         96 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\shelfTable.ts  | TypeScript |         34 |          0 |         30 |         64 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\userTable.js   | JavaScript |        230 |          0 |          1 |        231 |
+| c:\Users\samho\Documents\Uni\Project\BookClubServer\src\tableInterfaces\userTable.ts   | TypeScript |        130 |          0 |        118 |        248 |
+| Total                                                                                  |            |      2,348 |         22 |        701 |      3,071 |
++----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+

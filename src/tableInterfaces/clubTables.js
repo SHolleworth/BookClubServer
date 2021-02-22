@@ -54,7 +54,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.retrieveClubs = exports.insertClub = void 0;
+exports.insertClubMember = exports.retrieveClubs = exports.insertClub = void 0;
 exports.insertClub = function (clubData, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
@@ -156,6 +156,56 @@ exports.retrieveClubs = function (user, connection) {
                     console.error(error_3);
                     return [2 /*return*/, reject(error_3)];
                 case 12: return [2 /*return*/];
+            }
+        });
+    }); });
+};
+exports.insertClubMember = function (payload, connection) {
+    return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+        var _a, clubId, userId, exisitingMembers, error, newMember, message, error_4;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    _a = payload.memberData, clubId = _a.clubId, userId = _a.userId;
+                    _b.label = 1;
+                case 1:
+                    _b.trys.push([1, 9, , 11]);
+                    return [4 /*yield*/, connection.beginTransaction()];
+                case 2:
+                    _b.sent();
+                    return [4 /*yield*/, connection.query("SELECT * FROM clubMember WHERE clubId = ? AND userID = ?", [clubId, userId])];
+                case 3:
+                    exisitingMembers = _b.sent();
+                    if (!exisitingMembers.length) return [3 /*break*/, 5];
+                    return [4 /*yield*/, connection.rollback()];
+                case 4:
+                    _b.sent();
+                    error = "Error, member data already exists in database.";
+                    console.error(error);
+                    return [2 /*return*/, reject(error)];
+                case 5:
+                    newMember = { clubId: clubId, userId: userId, admin: false };
+                    return [4 /*yield*/, connection.query("INSERT INTO clubMember SET ?", [newMember])];
+                case 6:
+                    _b.sent();
+                    message = "Successfully added user: " + userId + " to club " + clubId + ".";
+                    console.log(message);
+                    console.log("Deleting invite " + payload.inviteId);
+                    return [4 /*yield*/, connection.query("DELETE FROM clubinvite WHERE id = ?", [payload.inviteId])];
+                case 7:
+                    _b.sent();
+                    return [4 /*yield*/, connection.commit()];
+                case 8:
+                    _b.sent();
+                    return [2 /*return*/, resolve(message)];
+                case 9:
+                    error_4 = _b.sent();
+                    return [4 /*yield*/, connection.rollback()];
+                case 10:
+                    _b.sent();
+                    console.error(error_4);
+                    return [2 /*return*/, reject(error_4)];
+                case 11: return [2 /*return*/];
             }
         });
     }); });
