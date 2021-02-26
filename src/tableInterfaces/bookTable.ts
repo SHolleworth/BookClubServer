@@ -150,4 +150,46 @@ const retrieveAndAppendBookInfo = async (books: BookObject[], connection: Connec
     
 }
 
-module.exports = { insertBook, retrieveBooksOfShelves }
+const retrieveBookById = (bookId: number, connection: Connection): Promise<BookObject> => {
+
+    return new Promise(async (resolve, reject) => {
+
+        const message = (books: BookObject[]) => `Retrieved ${books.length} books.`
+        
+        try {   
+
+            let bookData = []
+
+            bookData = await connection.query('SELECT * FROM Book WHERE id = ?', [bookId])     
+
+            if(bookData.length) {
+
+                const booksWithInfo: BookObject[] = await retrieveAndAppendBookInfo(bookData, connection)
+
+                console.log(message(booksWithInfo))
+
+                return resolve(booksWithInfo[0])
+            }
+            else {
+
+                const error = "Error, no book found for meeting"
+
+                console.error(error)
+
+                return reject(error)
+
+            }
+
+        }
+        catch (error) {
+
+            console.error(error)
+
+            return reject(error)
+
+        }
+    });
+    
+}
+
+module.exports = { insertBook, retrieveBooksOfShelves, retrieveBookById }

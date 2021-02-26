@@ -176,4 +176,38 @@ var retrieveAndAppendBookInfo = function (books, connection) { return __awaiter(
             }); })];
     });
 }); };
-module.exports = { insertBook: insertBook, retrieveBooksOfShelves: retrieveBooksOfShelves };
+var retrieveBookById = function (bookId, connection) {
+    return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+        var message, bookData, booksWithInfo, error, error_5;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    message = function (books) { return "Retrieved " + books.length + " books."; };
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 6, , 7]);
+                    bookData = [];
+                    return [4 /*yield*/, connection.query('SELECT * FROM Book WHERE id = ?', [bookId])];
+                case 2:
+                    bookData = _a.sent();
+                    if (!bookData.length) return [3 /*break*/, 4];
+                    return [4 /*yield*/, retrieveAndAppendBookInfo(bookData, connection)];
+                case 3:
+                    booksWithInfo = _a.sent();
+                    console.log(message(booksWithInfo));
+                    return [2 /*return*/, resolve(booksWithInfo[0])];
+                case 4:
+                    error = "Error, no book found for meeting";
+                    console.error(error);
+                    return [2 /*return*/, reject(error)];
+                case 5: return [3 /*break*/, 7];
+                case 6:
+                    error_5 = _a.sent();
+                    console.error(error_5);
+                    return [2 /*return*/, reject(error_5)];
+                case 7: return [2 /*return*/];
+            }
+        });
+    }); });
+};
+module.exports = { insertBook: insertBook, retrieveBooksOfShelves: retrieveBooksOfShelves, retrieveBookById: retrieveBookById };

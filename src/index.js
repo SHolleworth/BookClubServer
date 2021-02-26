@@ -174,7 +174,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                     case 5:
                         _c.books = _f.sent();
                         _d = userData;
-                        return [4 /*yield*/, clubTables_1.retrieveClubs(userData.user, connection)];
+                        return [4 /*yield*/, clubTables_1.retrieveClubsOfUser(userData.user, connection, socket)];
                     case 6:
                         _d.clubs = _f.sent();
                         _e = userData;
@@ -363,7 +363,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         return [4 /*yield*/, connection.getPoolConnection()];
                     case 2:
                         _a.sent();
-                        return [4 /*yield*/, clubTables_1.retrieveClubs(user, connection)];
+                        return [4 /*yield*/, clubTables_1.retrieveClubsOfUser(user, connection, socket)];
                     case 3:
                         clubs = _a.sent();
                         socket.emit('retrieve_clubs_response', clubs);
@@ -482,7 +482,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         }); });
         //Add a club member
         socket.on('post_club_member', function (payload) { return __awaiter(void 0, void 0, void 0, function () {
-            var _a, userId, clubId, connection, message, error_14;
+            var _a, userId, clubId, connection, message, clubs, error_14;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -491,24 +491,62 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         connection = new database_1.default();
                         _b.label = 1;
                     case 1:
-                        _b.trys.push([1, 4, 5, 6]);
+                        _b.trys.push([1, 5, 6, 7]);
                         return [4 /*yield*/, connection.getPoolConnection()];
                     case 2:
                         _b.sent();
                         return [4 /*yield*/, clubTables_1.insertClubMember(payload, connection)];
                     case 3:
                         message = _b.sent();
-                        socket.emit('post_club_member_response', message);
-                        return [3 /*break*/, 6];
+                        return [4 /*yield*/, connection.query("SELECT * FROM club WHERE id = ?", [clubId])];
                     case 4:
+                        clubs = _b.sent();
+                        console.log("Sending club refresh signal.");
+                        socket.to(clubs[0].name).emit("refresh_clubs");
+                        socket.emit('post_club_member_response', message);
+                        return [3 /*break*/, 7];
+                    case 5:
                         error_14 = _b.sent();
                         console.error(error_14);
                         socket.emit('post_club_member_error', error_14);
-                        return [3 /*break*/, 6];
-                    case 5:
+                        return [3 /*break*/, 7];
+                    case 6:
                         connection.release();
                         return [7 /*endfinally*/];
-                    case 6: return [2 /*return*/];
+                    case 7: return [2 /*return*/];
+                }
+            });
+        }); });
+        socket.on('post_meeting', function (meeting) { return __awaiter(void 0, void 0, void 0, function () {
+            var connection, message, club, error_15;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        connection = new database_1.default();
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 5, 6, 7]);
+                        return [4 /*yield*/, connection.getPoolConnection()];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, clubTables_1.insertMeeting(meeting, connection)];
+                    case 3:
+                        message = _a.sent();
+                        socket.emit('post_meeting_response', message);
+                        return [4 /*yield*/, connection.query("SELECT * FROM club WHERE id = ?", [meeting.clubId])];
+                    case 4:
+                        club = _a.sent();
+                        io.to(club[0].name).emit('refresh_clubs');
+                        return [3 /*break*/, 7];
+                    case 5:
+                        error_15 = _a.sent();
+                        console.error(error_15);
+                        socket.emit('post_meeting_error', error_15);
+                        return [3 /*break*/, 7];
+                    case 6:
+                        connection.release();
+                        return [7 /*endfinally*/];
+                    case 7: return [2 /*return*/];
                 }
             });
         }); });

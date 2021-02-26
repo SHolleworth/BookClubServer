@@ -54,59 +54,70 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.insertClubMember = exports.retrieveClubs = exports.insertClub = void 0;
+exports.retrieveMeetingsOfClubs = exports.insertMeeting = exports.insertClubMember = exports.retrieveClubsOfUser = exports.insertClub = void 0;
+var retrieveBookById = require("./bookTable").retrieveBookById;
 exports.insertClub = function (clubData, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var insertedClubRow, clubId, newClubMember, message, error_1, error_2;
+                var existingClubs, error, insertedClubRow, clubId, newClubMember, message, error_1, error_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             console.log("Attempting to insert club: " + clubData.name);
                             _a.label = 1;
                         case 1:
-                            _a.trys.push([1, 6, , 11]);
+                            _a.trys.push([1, 9, , 14]);
                             return [4 /*yield*/, connection.beginTransaction()];
                         case 2:
                             _a.sent();
-                            return [4 /*yield*/, connection.query('INSERT INTO Club (name) VALUES (?)', [clubData.name])];
+                            return [4 /*yield*/, connection.query('SELECT * FROM Club WHERE name = ?', [clubData.name])];
                         case 3:
+                            existingClubs = _a.sent();
+                            if (!existingClubs.length) return [3 /*break*/, 5];
+                            return [4 /*yield*/, connection.rollback()];
+                        case 4:
+                            _a.sent();
+                            error = "Club name already exists.";
+                            console.error(error);
+                            return [2 /*return*/, reject(error)];
+                        case 5: return [4 /*yield*/, connection.query('INSERT INTO Club (name) VALUES (?)', [clubData.name])];
+                        case 6:
                             insertedClubRow = _a.sent();
                             clubId = insertedClubRow.insertId;
                             newClubMember = { userId: clubData.userId, clubId: clubId, admin: true };
                             return [4 /*yield*/, connection.query('INSERT INTO ClubMember SET ?', [newClubMember])];
-                        case 4:
+                        case 7:
                             _a.sent();
                             return [4 /*yield*/, connection.commit()];
-                        case 5:
+                        case 8:
                             _a.sent();
                             message = "Successfully added club to database.";
                             console.log(message);
                             return [2 /*return*/, resolve(message)];
-                        case 6:
+                        case 9:
                             error_1 = _a.sent();
-                            _a.label = 7;
-                        case 7:
-                            _a.trys.push([7, 9, , 10]);
+                            _a.label = 10;
+                        case 10:
+                            _a.trys.push([10, 12, , 13]);
                             return [4 /*yield*/, connection.rollback()];
-                        case 8:
+                        case 11:
                             _a.sent();
                             console.error(error_1);
                             return [2 /*return*/, reject(error_1)];
-                        case 9:
+                        case 12:
                             error_2 = _a.sent();
                             console.error(error_2);
                             return [2 /*return*/, reject(error_2)];
-                        case 10: return [3 /*break*/, 11];
-                        case 11: return [2 /*return*/];
+                        case 13: return [3 /*break*/, 14];
+                        case 14: return [2 /*return*/];
                     }
                 });
             }); })];
     });
 }); };
-exports.retrieveClubs = function (user, connection) {
+exports.retrieveClubsOfUser = function (user, connection, socket) {
     return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-        var message, clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, memberDataOfUser, clubIdsOfUser, clubIds, memberIds, clubs, error_3;
+        var message, clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, meetings, memberDataOfUser, clubIdsOfUser, clubIds, memberIds, clubs, error_3;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -115,9 +126,10 @@ exports.retrieveClubs = function (user, connection) {
                     clubDataBelongingToUser = [];
                     memberDataBelongingToClubs = [];
                     userDataBelongingToMembers = [];
+                    meetings = [];
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 10, , 12]);
+                    _a.trys.push([1, 11, , 13]);
                     return [4 /*yield*/, connection.beginTransaction()];
                 case 2:
                     _a.sent();
@@ -142,20 +154,26 @@ exports.retrieveClubs = function (user, connection) {
                     return [4 /*yield*/, connection.query('SELECT * FROM User WHERE id IN (?)', [memberIds])];
                 case 8:
                     userDataBelongingToMembers = _a.sent();
-                    clubs = formatClubObjects(clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers);
-                    return [4 /*yield*/, connection.commit()];
+                    return [4 /*yield*/, exports.retrieveMeetingsOfClubs(clubDataBelongingToUser, connection)];
                 case 9:
+                    meetings = _a.sent();
+                    clubs = formatClubObjects(clubDataBelongingToUser, memberDataBelongingToClubs, userDataBelongingToMembers, meetings);
+                    clubs.forEach(function (club) { return socket.join(club.name); });
+                    console.log("Joined rooms:");
+                    console.log(socket.rooms);
+                    return [4 /*yield*/, connection.commit()];
+                case 10:
                     _a.sent();
                     console.log(message(clubs));
                     return [2 /*return*/, resolve(clubs)];
-                case 10:
+                case 11:
                     error_3 = _a.sent();
                     return [4 /*yield*/, connection.rollback()];
-                case 11:
+                case 12:
                     _a.sent();
                     console.error(error_3);
                     return [2 /*return*/, reject(error_3)];
-                case 12: return [2 /*return*/];
+                case 13: return [2 /*return*/];
             }
         });
     }); });
@@ -210,7 +228,7 @@ exports.insertClubMember = function (payload, connection) {
         });
     }); });
 };
-var formatClubObjects = function (clubDataSet, memberDataSet, userDataSet) {
+var formatClubObjects = function (clubDataSet, memberDataSet, userDataSet, meetings) {
     return clubDataSet.map(function (clubData) {
         var memberDataOfThisClub = memberDataSet.filter(function (memberData) { return memberData.clubId === clubData.id; });
         var members = memberDataOfThisClub.map(function (memberData) {
@@ -222,7 +240,137 @@ var formatClubObjects = function (clubDataSet, memberDataSet, userDataSet) {
             }
             return undefined;
         });
-        var club = __assign(__assign({}, clubData), { members: __spreadArrays(members) });
+        var meeting = meetings.find(function (meeting) { return meeting.clubId === clubData.id; });
+        var club = __assign(__assign({}, clubData), { members: __spreadArrays(members), meeting: meeting });
         return club;
     });
 };
+exports.insertMeeting = function (meeting, connection) {
+    return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+        var _a, day, month, year, _b, minutes, hours, dateAndTime, bookId, clubId, meetingData, existingMeetings, message, error_5;
+        var _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
+                case 0:
+                    _a = meeting.date, day = _a.day, month = _a.month, year = _a.year;
+                    _b = meeting.time, minutes = _b.minutes, hours = _b.hours;
+                    dateAndTime = new Date(year, month - 1, day, hours, minutes);
+                    bookId = (_c = meeting.book) === null || _c === void 0 ? void 0 : _c.id;
+                    clubId = meeting.clubId;
+                    meetingData = { bookId: bookId, clubId: clubId, dateAndTime: dateAndTime };
+                    _d.label = 1;
+                case 1:
+                    _d.trys.push([1, 4, , 5]);
+                    return [4 /*yield*/, connection.query("SELECT * FROM clubMeeting WHERE clubId = ?", [clubId])];
+                case 2:
+                    existingMeetings = _d.sent();
+                    if (existingMeetings.length)
+                        return [2 /*return*/, reject("Error, club already has meeting.")];
+                    return [4 /*yield*/, connection.query("INSERT INTO clubMeeting SET ?", [meetingData])];
+                case 3:
+                    _d.sent();
+                    message = "Added meeting to database.";
+                    console.log(message);
+                    return [2 /*return*/, resolve(message)];
+                case 4:
+                    error_5 = _d.sent();
+                    console.error(error_5);
+                    return [2 /*return*/, reject(error_5)];
+                case 5: return [2 /*return*/];
+            }
+        });
+    }); });
+};
+exports.retrieveMeetingsOfClubs = function (clubs, connection) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var meetingData, meetings, message, error_6;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 3, , 4]);
+                            return [4 /*yield*/, Promise.all(clubs.map(function (club) {
+                                    return retrieveMeeting(club, connection);
+                                }))];
+                        case 1:
+                            meetingData = _a.sent();
+                            return [4 /*yield*/, Promise.all(meetingData.map(function (meeting) { return __awaiter(void 0, void 0, void 0, function () {
+                                    var minutes, hours, day, month, year, date_1, time_1, id, clubId, dateAndTime, date, time, book, error_7;
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0:
+                                                if (meeting.dateAndTime === null) {
+                                                    minutes = null;
+                                                    hours = null;
+                                                    day = null;
+                                                    month = null;
+                                                    year = null;
+                                                    date_1 = { day: day, month: month, year: year };
+                                                    time_1 = { minutes: minutes, hours: hours };
+                                                    return [2 /*return*/, Promise.resolve({ id: null, book: null, date: date_1, time: time_1, clubId: meeting.clubId })];
+                                                }
+                                                id = meeting.id;
+                                                clubId = meeting.clubId;
+                                                dateAndTime = new Date(meeting.dateAndTime);
+                                                date = {
+                                                    year: dateAndTime.getFullYear(),
+                                                    month: dateAndTime.getMonth() + 1,
+                                                    day: dateAndTime.getDate()
+                                                };
+                                                time = {
+                                                    hours: dateAndTime.getHours(),
+                                                    minutes: dateAndTime.getMinutes()
+                                                };
+                                                _a.label = 1;
+                                            case 1:
+                                                _a.trys.push([1, 3, , 4]);
+                                                return [4 /*yield*/, retrieveBookById(meeting.bookId, connection)];
+                                            case 2:
+                                                book = _a.sent();
+                                                return [2 /*return*/, Promise.resolve({ id: id, book: book, date: date, time: time, clubId: clubId })];
+                                            case 3:
+                                                error_7 = _a.sent();
+                                                return [2 /*return*/, Promise.reject(error_7)];
+                                            case 4: return [2 /*return*/];
+                                        }
+                                    });
+                                }); }))];
+                        case 2:
+                            meetings = _a.sent();
+                            message = "Retrieved meetings of clubs.";
+                            console.log(message);
+                            return [2 /*return*/, resolve(meetings)];
+                        case 3:
+                            error_6 = _a.sent();
+                            console.error(error_6);
+                            return [2 /*return*/, reject(error_6)];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            }); })];
+    });
+}); };
+var retrieveMeeting = function (club, connection) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var meetingData, error_8;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4 /*yield*/, connection.query("SELECT * FROM clubMeeting WHERE clubId = ?", [club.id])];
+                        case 1:
+                            meetingData = _a.sent();
+                            if (meetingData.length)
+                                return [2 /*return*/, resolve(meetingData[0])];
+                            return [2 /*return*/, resolve({ id: null, bookId: null, dateAndTime: null, clubId: club.id })];
+                        case 2:
+                            error_8 = _a.sent();
+                            console.error(error_8);
+                            return [2 /*return*/, reject(error_8)];
+                        case 3: return [2 /*return*/];
+                    }
+                });
+            }); })];
+    });
+}); };

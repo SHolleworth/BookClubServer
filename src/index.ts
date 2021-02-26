@@ -14,8 +14,8 @@ const { insertShelf, retrieveShelvesOfUser } = require('./tableInterfaces/shelfT
 const { insertUser, retrieveUser, retrieveUserIdAndSocketIdByUsername, updateSocketIdOfUser } = require('./tableInterfaces/userTable')
 const { insertInvite, retrieveInvitesOfUser, deleteInvite } = require('./tableInterfaces/inviteTable')
 
-import { BookObject, ClubInvitePost, ClubInviteData, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject, ClubInviteReceive, MemberData, AcceptClubInviteObject } from '../../types' 
-import { insertClub, insertClubMember, retrieveClubs as retrieveClubsOfUser } from "./tableInterfaces/clubTables"
+import { BookObject, ClubInvitePost, ClubInviteData, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject, ClubInviteReceive, MemberData, AcceptClubInviteObject, MeetingObject } from '../../types' 
+import { insertClub, insertClubMember, insertMeeting, retrieveClubsOfUser } from "./tableInterfaces/clubTables"
 import ConnectionWrapper from './database'
 
 fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
@@ -133,7 +133,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
                 userData.books = await retrieveBooksOfShelves(userData.shelves, connection)
 
-                userData.clubs = await retrieveClubsOfUser(userData.user, connection)
+                userData.clubs = await retrieveClubsOfUser(userData.user, connection, socket)
 
                 userData.invites = await retrieveInvitesOfUser(userData.user, connection)
 
@@ -305,7 +305,7 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
                 await connection.getPoolConnection()
 
-                const clubs = await retrieveClubsOfUser(user, connection)
+                const clubs = await retrieveClubsOfUser(user, connection, socket)
 
                 socket.emit('retrieve_clubs_response', clubs)
 
@@ -448,6 +448,12 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
                 const message = await insertClubMember(payload, connection)
 
+                const clubs = await connection.query("SELECT * FROM club WHERE id = ?", [clubId])
+
+                console.log("Sending club refresh signal.")
+
+                socket.to(clubs[0].name).emit("refresh_clubs")
+
                 socket.emit('post_club_member_response', message)
 
             }
@@ -464,6 +470,39 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
             }
             
+        })
+
+
+        socket.on('post_meeting' , async (meeting: MeetingObject) => {
+        
+            const connection = new (ConnectionWrapper as any)()
+
+            try {
+
+                await connection.getPoolConnection()
+
+                const message = await insertMeeting(meeting, connection)
+
+                socket.emit('post_meeting_response', message)
+
+                const club = await connection.query("SELECT * FROM club WHERE id = ?", [meeting.clubId])
+
+                io.to(club[0].name).emit('refresh_clubs')
+
+            }
+            catch(error) {
+
+                console.error(error)
+                
+                socket.emit('post_meeting_error', error)
+
+            }
+            finally {
+
+                connection.release()
+
+            }
+
         })
 
     })
