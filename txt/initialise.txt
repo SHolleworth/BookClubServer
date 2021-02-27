@@ -78,4 +78,14 @@ CREATE TABLE clubInvite (\
 	FOREIGN KEY (clubId) REFERENCES Club(id),\
 	PRIMARY KEY (id)\
 );
+
+CREATE TABLE clubMeeting (\
+	id INT NOT NULL AUTO_INCREMENT,\
+	dateAndTime VARCHAR(255) NOT NULL,\
+	bookId Int NOT NULL,\
+	clubId INT NOT NULL,\
+	FOREIGN KEY (bookId) REFERENCES Book(id),\
+	FOREIGN KEY (clubId) REFERENCES Club(id),\
+	PRIMARY KEY (id)\
+);
 	

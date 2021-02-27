@@ -102,10 +102,49 @@ var insertBook = function (book, connection) { return __awaiter(void 0, void 0, 
             }); })];
     });
 }); };
+var deleteBook = function (book, connection) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var message, error_3;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 6, , 8]);
+                            return [4 /*yield*/, connection.beginTransaction()];
+                        case 1:
+                            _a.sent();
+                            return [4 /*yield*/, connection.query("DELETE FROM bookinfo WHERE bookId = ?", [book.id])];
+                        case 2:
+                            _a.sent();
+                            return [4 /*yield*/, connection.query("DELETE FROM clubmeeting WHERE bookId = ?", [book.id])];
+                        case 3:
+                            _a.sent();
+                            return [4 /*yield*/, connection.query("DELETE FROM book WHERE id = ?", [book.id])];
+                        case 4:
+                            _a.sent();
+                            message = "Deleted book " + book.info.title + ".";
+                            console.log(message);
+                            return [4 /*yield*/, connection.commit()];
+                        case 5:
+                            _a.sent();
+                            return [2 /*return*/, resolve(message)];
+                        case 6:
+                            error_3 = _a.sent();
+                            return [4 /*yield*/, connection.rollback()];
+                        case 7:
+                            _a.sent();
+                            console.error(error_3);
+                            return [2 /*return*/, reject(error_3)];
+                        case 8: return [2 /*return*/];
+                    }
+                });
+            }); })];
+    });
+}); };
 var retrieveBooksOfShelves = function (shelves, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var message, books, books_1, shelfIds, booksWithInfo, error_3;
+                var message, books, books_1, shelfIds, booksWithInfo, error_4;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -134,9 +173,9 @@ var retrieveBooksOfShelves = function (shelves, connection) { return __awaiter(v
                             return [2 /*return*/, resolve(books_1)];
                         case 5: return [3 /*break*/, 7];
                         case 6:
-                            error_3 = _a.sent();
-                            console.error(error_3);
-                            return [2 /*return*/, reject(error_3)];
+                            error_4 = _a.sent();
+                            console.error(error_4);
+                            return [2 /*return*/, reject(error_4)];
                         case 7: return [2 /*return*/];
                     }
                 });
@@ -146,7 +185,7 @@ var retrieveBooksOfShelves = function (shelves, connection) { return __awaiter(v
 var retrieveAndAppendBookInfo = function (books, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var bookIds, bookInfo_1, error_4;
+                var bookIds, bookInfo_1, error_5;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -168,8 +207,8 @@ var retrieveAndAppendBookInfo = function (books, connection) { return __awaiter(
                                     return book;
                                 }))];
                         case 3:
-                            error_4 = _a.sent();
-                            return [2 /*return*/, reject(error_4)];
+                            error_5 = _a.sent();
+                            return [2 /*return*/, reject(error_5)];
                         case 4: return [2 /*return*/];
                     }
                 });
@@ -178,7 +217,7 @@ var retrieveAndAppendBookInfo = function (books, connection) { return __awaiter(
 }); };
 var retrieveBookById = function (bookId, connection) {
     return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-        var message, bookData, booksWithInfo, error, error_5;
+        var message, bookData, booksWithInfo, error, error_6;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -202,12 +241,12 @@ var retrieveBookById = function (bookId, connection) {
                     return [2 /*return*/, reject(error)];
                 case 5: return [3 /*break*/, 7];
                 case 6:
-                    error_5 = _a.sent();
-                    console.error(error_5);
-                    return [2 /*return*/, reject(error_5)];
+                    error_6 = _a.sent();
+                    console.error(error_6);
+                    return [2 /*return*/, reject(error_6)];
                 case 7: return [2 /*return*/];
             }
         });
     }); });
 };
-module.exports = { insertBook: insertBook, retrieveBooksOfShelves: retrieveBooksOfShelves, retrieveBookById: retrieveBookById };
+module.exports = { insertBook: insertBook, deleteBook: deleteBook, retrieveBooksOfShelves: retrieveBooksOfShelves, retrieveBookById: retrieveBookById };

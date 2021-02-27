@@ -68,10 +68,71 @@ var insertShelf = function (shelf, connection) { return __awaiter(void 0, void 0
             }); })];
     });
 }); };
+var deleteShelf = function (shelf, connection) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+                var bookDataFromShelf, message, error_2;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            console.log("Deleting shelf " + shelf.name);
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 8, , 10]);
+                            return [4 /*yield*/, connection.beginTransaction()];
+                        case 2:
+                            _a.sent();
+                            return [4 /*yield*/, connection.query("SELECT * FROM book WHERE shelfId = ?", [shelf.id])];
+                        case 3:
+                            bookDataFromShelf = _a.sent();
+                            return [4 /*yield*/, Promise.all(bookDataFromShelf.map(function (bookData) { return __awaiter(void 0, void 0, void 0, function () {
+                                    var error_3;
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0:
+                                                _a.trys.push([0, 2, , 3]);
+                                                return [4 /*yield*/, connection.query("DELETE FROM bookinfo WHERE bookId = ?", [bookData.id])];
+                                            case 1:
+                                                _a.sent();
+                                                return [2 /*return*/, Promise.resolve(1)];
+                                            case 2:
+                                                error_3 = _a.sent();
+                                                return [2 /*return*/, Promise.reject(error_3)];
+                                            case 3: return [2 /*return*/];
+                                        }
+                                    });
+                                }); }))];
+                        case 4:
+                            _a.sent();
+                            return [4 /*yield*/, connection.query("DELETE FROM book WHERE shelfId = ?", [shelf.id])];
+                        case 5:
+                            _a.sent();
+                            return [4 /*yield*/, connection.query("DELETE FROM shelf WHERE id = ?", [shelf.id])];
+                        case 6:
+                            _a.sent();
+                            message = "Deleted shelf " + shelf.name + " and its contents.";
+                            return [4 /*yield*/, connection.commit()];
+                        case 7:
+                            _a.sent();
+                            console.log(message);
+                            return [2 /*return*/, resolve(message)];
+                        case 8:
+                            error_2 = _a.sent();
+                            return [4 /*yield*/, connection.rollback()];
+                        case 9:
+                            _a.sent();
+                            console.error(error_2);
+                            return [2 /*return*/, reject(error_2)];
+                        case 10: return [2 /*return*/];
+                    }
+                });
+            }); })];
+    });
+}); };
 var retrieveShelvesOfUser = function (user, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var shelves, message, error_2;
+                var shelves, message, error_4;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -83,13 +144,13 @@ var retrieveShelvesOfUser = function (user, connection) { return __awaiter(void 
                             console.log(message);
                             return [2 /*return*/, resolve(shelves)];
                         case 2:
-                            error_2 = _a.sent();
-                            console.error(error_2);
-                            return [2 /*return*/, reject(error_2)];
+                            error_4 = _a.sent();
+                            console.error(error_4);
+                            return [2 /*return*/, reject(error_4)];
                         case 3: return [2 /*return*/];
                     }
                 });
             }); })];
     });
 }); };
-module.exports = { insertShelf: insertShelf, retrieveShelvesOfUser: retrieveShelvesOfUser };
+module.exports = { insertShelf: insertShelf, deleteShelf: deleteShelf, retrieveShelvesOfUser: retrieveShelvesOfUser };

@@ -1,5 +1,6 @@
 import { BookObject, ShelfObject } from "../../../types"
 import { Connection } from '../database'
+import { configureConnectionPool } from "./connection"
 
 const insertBook = async (book: BookObject, connection: Connection) => {
     
@@ -56,6 +57,43 @@ const insertBook = async (book: BookObject, connection: Connection) => {
 
     })
 
+}
+
+const deleteBook = async (book:BookObject, connection: Connection) => {
+
+    return new Promise(async (resolve, reject) => {   
+
+        try {
+
+            await connection.beginTransaction()
+
+            await connection.query("DELETE FROM bookinfo WHERE bookId = ?", [book.id])
+
+            await connection.query("DELETE FROM clubmeeting WHERE bookId = ?", [book.id])
+
+            await connection.query("DELETE FROM book WHERE id = ?", [book.id])
+
+            const message = `Deleted book ${book.info.title}.`
+
+            console.log(message)
+
+            await connection.commit()
+
+            return resolve(message)
+
+        }
+        catch (error) {
+
+            await connection.rollback()
+
+            console.error(error)
+
+            return reject(error)
+
+        }
+
+    })
+    
 }
 
 const retrieveBooksOfShelves = async (shelves: ShelfObject[], connection: Connection) => {
@@ -192,4 +230,4 @@ const retrieveBookById = (bookId: number, connection: Connection): Promise<BookO
     
 }
 
-module.exports = { insertBook, retrieveBooksOfShelves, retrieveBookById }
+module.exports = { insertBook, deleteBook, retrieveBooksOfShelves, retrieveBookById }

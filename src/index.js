@@ -46,9 +46,9 @@ var port = 3000;
 var io = require('socket.io')(server);
 var fs = require('fs');
 var searchGoogleBooksByTitle = require('./requestHandler').searchGoogleBooksByTitle;
-var _a = require('./tableInterfaces/bookTable'), insertBook = _a.insertBook, retrieveBooksOfShelves = _a.retrieveBooksOfShelves;
+var _a = require('./tableInterfaces/bookTable'), insertBook = _a.insertBook, deleteBook = _a.deleteBook, retrieveBooksOfShelves = _a.retrieveBooksOfShelves;
 var _b = require('./tableInterfaces/connection'), configureConnectionPool = _b.configureConnectionPool, getPool = _b.getPool;
-var _c = require('./tableInterfaces/shelfTable'), insertShelf = _c.insertShelf, retrieveShelvesOfUser = _c.retrieveShelvesOfUser;
+var _c = require('./tableInterfaces/shelfTable'), insertShelf = _c.insertShelf, deleteShelf = _c.deleteShelf, retrieveShelvesOfUser = _c.retrieveShelvesOfUser;
 var _d = require('./tableInterfaces/userTable'), insertUser = _d.insertUser, retrieveUser = _d.retrieveUser, retrieveUserIdAndSocketIdByUsername = _d.retrieveUserIdAndSocketIdByUsername, updateSocketIdOfUser = _d.updateSocketIdOfUser;
 var _e = require('./tableInterfaces/inviteTable'), insertInvite = _e.insertInvite, retrieveInvitesOfUser = _e.retrieveInvitesOfUser, deleteInvite = _e.deleteInvite;
 var clubTables_1 = require("./tableInterfaces/clubTables");
@@ -227,9 +227,37 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                 }
             });
         }); });
+        socket.on('delete_shelf', function (shelf) { return __awaiter(void 0, void 0, void 0, function () {
+            var connection, message, error_6;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        connection = new database_1.default();
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 4, 5, 6]);
+                        return [4 /*yield*/, connection.getPoolConnection()];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, deleteShelf(shelf, connection)];
+                    case 3:
+                        message = _a.sent();
+                        socket.emit('delete_shelf_response', message);
+                        return [3 /*break*/, 6];
+                    case 4:
+                        error_6 = _a.sent();
+                        socket.emit('delete_shelf_error', error_6);
+                        return [3 /*break*/, 6];
+                    case 5:
+                        connection.release();
+                        return [7 /*endfinally*/];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        }); });
         //Retrieve shelves of user
         socket.on('retrieve_shelves', function (user) { return __awaiter(void 0, void 0, void 0, function () {
-            var connection, shelves, error_6;
+            var connection, shelves, error_7;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -246,8 +274,8 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         socket.emit('retrieve_shelves_response', shelves);
                         return [3 /*break*/, 6];
                     case 4:
-                        error_6 = _a.sent();
-                        socket.emit('retrieve_shelves_error', error_6);
+                        error_7 = _a.sent();
+                        socket.emit('retrieve_shelves_error', error_7);
                         return [3 /*break*/, 6];
                     case 5:
                         connection.release();
@@ -258,7 +286,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         }); });
         //New book to add to database
         socket.on('post_new_book', function (book) { return __awaiter(void 0, void 0, void 0, function () {
-            var connection, message, error_7;
+            var connection, message, error_8;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -275,8 +303,36 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         socket.emit('post_new_book_response', message);
                         return [3 /*break*/, 6];
                     case 4:
-                        error_7 = _a.sent();
-                        socket.emit('post_new_book_error', error_7);
+                        error_8 = _a.sent();
+                        socket.emit('post_new_book_error', error_8);
+                        return [3 /*break*/, 6];
+                    case 5:
+                        connection.release();
+                        return [7 /*endfinally*/];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        }); });
+        socket.on('delete_book', function (book) { return __awaiter(void 0, void 0, void 0, function () {
+            var connection, message, error_9;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        connection = new database_1.default();
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 4, 5, 6]);
+                        return [4 /*yield*/, connection.getPoolConnection()];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, deleteBook(book, connection)];
+                    case 3:
+                        message = _a.sent();
+                        socket.emit('delete_book_response', message);
+                        return [3 /*break*/, 6];
+                    case 4:
+                        error_9 = _a.sent();
+                        socket.emit('delete_book_error', error_9);
                         return [3 /*break*/, 6];
                     case 5:
                         connection.release();
@@ -287,7 +343,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         }); });
         //Retrieve books of user
         socket.on('retrieve_books', function (user) { return __awaiter(void 0, void 0, void 0, function () {
-            var data, connection, _a, _b, error_8;
+            var data, connection, _a, _b, error_10;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -310,8 +366,8 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         socket.emit('retrieve_books_response', data);
                         return [3 /*break*/, 7];
                     case 5:
-                        error_8 = _c.sent();
-                        socket.emit('retrieve_books_error', error_8);
+                        error_10 = _c.sent();
+                        socket.emit('retrieve_books_error', error_10);
                         return [3 /*break*/, 7];
                     case 6:
                         connection.release();
@@ -322,7 +378,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         }); });
         //Post new club
         socket.on('post_new_club', function (clubData) { return __awaiter(void 0, void 0, void 0, function () {
-            var connection, message, error_9;
+            var connection, message, error_11;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -339,8 +395,8 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         socket.emit('post_new_club_response', message);
                         return [3 /*break*/, 6];
                     case 4:
-                        error_9 = _a.sent();
-                        socket.emit('post_new_club_error', error_9);
+                        error_11 = _a.sent();
+                        socket.emit('post_new_club_error', error_11);
                         return [3 /*break*/, 6];
                     case 5:
                         connection.release();
@@ -351,7 +407,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         }); });
         //Retrieve clubs of user
         socket.on('retrieve_clubs', function (user) { return __awaiter(void 0, void 0, void 0, function () {
-            var connection, clubs, error_10;
+            var connection, clubs, error_12;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -369,8 +425,8 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         socket.emit('retrieve_clubs_response', clubs);
                         return [3 /*break*/, 6];
                     case 4:
-                        error_10 = _a.sent();
-                        socket.emit('retrieve_clubs_error', error_10);
+                        error_12 = _a.sent();
+                        socket.emit('retrieve_clubs_error', error_12);
                         return [3 /*break*/, 6];
                     case 5:
                         connection.release();
@@ -381,7 +437,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         }); });
         //Send club invite to username
         socket.on('send_club_invite', function (invite) { return __awaiter(void 0, void 0, void 0, function () {
-            var invitedUsername, inviter, club, connection, _a, id, socketId, inviteData, inviteId, inviteToSend, error_11;
+            var invitedUsername, inviter, club, connection, _a, id, socketId, inviteData, inviteId, inviteToSend, error_13;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -407,9 +463,9 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         socket.emit('send_club_invite_response', "Invite sent.");
                         return [3 /*break*/, 7];
                     case 5:
-                        error_11 = _b.sent();
-                        console.error(error_11);
-                        socket.emit('send_club_invite_error', error_11);
+                        error_13 = _b.sent();
+                        console.error(error_13);
+                        socket.emit('send_club_invite_error', error_13);
                         return [3 /*break*/, 7];
                     case 6:
                         connection.release();
@@ -419,7 +475,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
             });
         }); });
         socket.on('retrieve_club_invites', function (user) { return __awaiter(void 0, void 0, void 0, function () {
-            var connection, invites, error_12;
+            var connection, invites, error_14;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -438,9 +494,9 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         socket.emit('retrieve_club_invites_response', invites);
                         return [3 /*break*/, 6];
                     case 4:
-                        error_12 = _a.sent();
-                        console.error(error_12);
-                        socket.emit('retrieve_club_invites_error', error_12);
+                        error_14 = _a.sent();
+                        console.error(error_14);
+                        socket.emit('retrieve_club_invites_error', error_14);
                         return [3 /*break*/, 6];
                     case 5:
                         connection.release();
@@ -450,7 +506,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
             });
         }); });
         socket.on('delete_club_invite', function (invite) { return __awaiter(void 0, void 0, void 0, function () {
-            var connection, message, error_13;
+            var connection, message, error_15;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -469,9 +525,9 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         socket.emit('delete_club_invite_response', message);
                         return [3 /*break*/, 6];
                     case 4:
-                        error_13 = _a.sent();
-                        console.error(error_13);
-                        socket.emit('delete_club_invite_error', error_13);
+                        error_15 = _a.sent();
+                        console.error(error_15);
+                        socket.emit('delete_club_invite_error', error_15);
                         return [3 /*break*/, 6];
                     case 5:
                         connection.release();
@@ -482,7 +538,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         }); });
         //Add a club member
         socket.on('post_club_member', function (payload) { return __awaiter(void 0, void 0, void 0, function () {
-            var _a, userId, clubId, connection, message, clubs, error_14;
+            var _a, userId, clubId, connection, message, clubs, error_16;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -506,9 +562,9 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         socket.emit('post_club_member_response', message);
                         return [3 /*break*/, 7];
                     case 5:
-                        error_14 = _b.sent();
-                        console.error(error_14);
-                        socket.emit('post_club_member_error', error_14);
+                        error_16 = _b.sent();
+                        console.error(error_16);
+                        socket.emit('post_club_member_error', error_16);
                         return [3 /*break*/, 7];
                     case 6:
                         connection.release();
@@ -518,7 +574,7 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
             });
         }); });
         socket.on('post_meeting', function (meeting) { return __awaiter(void 0, void 0, void 0, function () {
-            var connection, message, club, error_15;
+            var connection, message, club, error_17;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -539,9 +595,9 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                         io.to(club[0].name).emit('refresh_clubs');
                         return [3 /*break*/, 7];
                     case 5:
-                        error_15 = _a.sent();
-                        console.error(error_15);
-                        socket.emit('post_meeting_error', error_15);
+                        error_17 = _a.sent();
+                        console.error(error_17);
+                        socket.emit('post_meeting_error', error_17);
                         return [3 /*break*/, 7];
                     case 6:
                         connection.release();

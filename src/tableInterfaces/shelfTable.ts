@@ -34,6 +34,62 @@ const insertShelf = async (shelf: ShelfObject, connection: Connection) => {
 
 }
 
+const deleteShelf = async (shelf: ShelfObject, connection: Connection) => {
+    
+    return new Promise(async (resolve, reject) => {
+        
+        console.log("Deleting shelf " + shelf.name)
+
+        try {
+
+            await connection.beginTransaction()
+
+            const bookDataFromShelf = await connection.query("SELECT * FROM book WHERE shelfId = ?", [shelf.id])
+
+            await Promise.all(bookDataFromShelf.map(async (bookData: any) => {
+               
+                try {
+
+                    await connection.query("DELETE FROM bookinfo WHERE bookId = ?", [bookData.id])
+    
+                    return Promise.resolve(1)
+
+                }
+                catch (error) {
+
+                    return Promise.reject(error)
+
+                }
+
+            }))
+
+            await connection.query("DELETE FROM book WHERE shelfId = ?", [shelf.id])
+
+            await connection.query("DELETE FROM shelf WHERE id = ?", [shelf.id])
+
+            const message = `Deleted shelf ${shelf.name} and its contents.`
+
+            await connection.commit()
+
+            console.log(message)
+            
+            return resolve(message)
+
+        }
+        catch (error) {
+
+            await connection.rollback()
+
+            console.error(error)
+
+            return reject(error)
+
+        }
+
+    })
+
+}
+
 const retrieveShelvesOfUser = async (user: UserObject, connection: Connection): Promise<ShelfObject[]> => {
     
     return new Promise(async (resolve, reject) => {       
@@ -61,4 +117,4 @@ const retrieveShelvesOfUser = async (user: UserObject, connection: Connection): 
 
 }
 
-module.exports = { insertShelf, retrieveShelvesOfUser }
+module.exports = { insertShelf, deleteShelf, retrieveShelvesOfUser }

@@ -8,9 +8,9 @@ const io = require('socket.io')(server)
 const fs = require('fs')
 
 const { searchGoogleBooksByTitle } = require('./requestHandler')
-const { insertBook, retrieveBooksOfShelves } = require('./tableInterfaces/bookTable')
+const { insertBook, deleteBook, retrieveBooksOfShelves } = require('./tableInterfaces/bookTable')
 const { configureConnectionPool, getPool }= require('./tableInterfaces/connection')
-const { insertShelf, retrieveShelvesOfUser } = require('./tableInterfaces/shelfTable')
+const { insertShelf, deleteShelf, retrieveShelvesOfUser } = require('./tableInterfaces/shelfTable')
 const { insertUser, retrieveUser, retrieveUserIdAndSocketIdByUsername, updateSocketIdOfUser } = require('./tableInterfaces/userTable')
 const { insertInvite, retrieveInvitesOfUser, deleteInvite } = require('./tableInterfaces/inviteTable')
 
@@ -182,6 +182,32 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
         })
 
+        socket.on('delete_shelf' , async (shelf: ShelfObject) => {
+
+            const connection = new (ConnectionWrapper as any)()
+
+            try {
+
+                await connection.getPoolConnection()
+
+                const message = await deleteShelf(shelf, connection)
+
+                socket.emit('delete_shelf_response', message)
+
+            }
+            catch(error) {
+
+                socket.emit('delete_shelf_error', error)
+
+            }
+            finally {
+
+                connection.release()
+
+            }
+
+        })
+
         //Retrieve shelves of user
         socket.on('retrieve_shelves', async (user: UserObject) => {
 
@@ -227,6 +253,32 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
             catch(error){
                 
                 socket.emit('post_new_book_error', error)
+
+            }
+            finally {
+
+                connection.release()
+
+            }
+
+        })
+
+        socket.on('delete_book', async (book: BookObject) =>{
+
+            const connection = new (ConnectionWrapper as any)()
+
+            try {
+
+                await connection.getPoolConnection()
+
+                const message = await deleteBook(book, connection)
+
+                socket.emit('delete_book_response', message)
+
+            }
+            catch(error){
+                
+                socket.emit('delete_book_error', error)
 
             }
             finally {
