@@ -278,6 +278,31 @@ export const insertMeeting = (meeting: MeetingObject, connection: Connection) =>
 
 }
 
+export const deleteMeeting = (meeting: MeetingObject, connection: Connection) => {
+
+    return new Promise(async (resolve, reject) => {
+
+        try {
+
+            await connection.query("DELETE FROM clubmeeting WHERE id = ?", [meeting.id])
+    
+            const message = `Deleted meeting.`
+
+            console.log(message)
+
+            return resolve(message)
+
+        }
+        catch (error) {
+
+            console.error(error)
+
+            return reject(error)
+        }
+    });
+    
+}
+
 export const retrieveMeetingsOfClubs = async (clubs: ClubData[], connection: Connection): Promise<MeetingObject[]> => {
 
     return new Promise(async (resolve, reject) => {

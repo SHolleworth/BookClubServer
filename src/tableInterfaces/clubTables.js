@@ -54,7 +54,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.retrieveMeetingsOfClubs = exports.insertMeeting = exports.insertClubMember = exports.retrieveClubsOfUser = exports.insertClub = void 0;
+exports.retrieveMeetingsOfClubs = exports.deleteMeeting = exports.insertMeeting = exports.insertClubMember = exports.retrieveClubsOfUser = exports.insertClub = void 0;
 var retrieveBookById = require("./bookTable").retrieveBookById;
 exports.insertClub = function (clubData, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
@@ -281,10 +281,32 @@ exports.insertMeeting = function (meeting, connection) {
         });
     }); });
 };
+exports.deleteMeeting = function (meeting, connection) {
+    return new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
+        var message, error_6;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, connection.query("DELETE FROM clubmeeting WHERE id = ?", [meeting.id])];
+                case 1:
+                    _a.sent();
+                    message = "Deleted meeting.";
+                    console.log(message);
+                    return [2 /*return*/, resolve(message)];
+                case 2:
+                    error_6 = _a.sent();
+                    console.error(error_6);
+                    return [2 /*return*/, reject(error_6)];
+                case 3: return [2 /*return*/];
+            }
+        });
+    }); });
+};
 exports.retrieveMeetingsOfClubs = function (clubs, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var meetingData, meetings, message, error_6;
+                var meetingData, meetings, message, error_7;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -295,7 +317,7 @@ exports.retrieveMeetingsOfClubs = function (clubs, connection) { return __awaite
                         case 1:
                             meetingData = _a.sent();
                             return [4 /*yield*/, Promise.all(meetingData.map(function (meeting) { return __awaiter(void 0, void 0, void 0, function () {
-                                    var minutes, hours, day, month, year, date_1, time_1, id, clubId, dateAndTime, date, time, book, error_7;
+                                    var minutes, hours, day, month, year, date_1, time_1, id, clubId, dateAndTime, date, time, book, error_8;
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
                                             case 0:
@@ -329,8 +351,8 @@ exports.retrieveMeetingsOfClubs = function (clubs, connection) { return __awaite
                                                 book = _a.sent();
                                                 return [2 /*return*/, Promise.resolve({ id: id, book: book, date: date, time: time, clubId: clubId })];
                                             case 3:
-                                                error_7 = _a.sent();
-                                                return [2 /*return*/, Promise.reject(error_7)];
+                                                error_8 = _a.sent();
+                                                return [2 /*return*/, Promise.reject(error_8)];
                                             case 4: return [2 /*return*/];
                                         }
                                     });
@@ -341,9 +363,9 @@ exports.retrieveMeetingsOfClubs = function (clubs, connection) { return __awaite
                             console.log(message);
                             return [2 /*return*/, resolve(meetings)];
                         case 3:
-                            error_6 = _a.sent();
-                            console.error(error_6);
-                            return [2 /*return*/, reject(error_6)];
+                            error_7 = _a.sent();
+                            console.error(error_7);
+                            return [2 /*return*/, reject(error_7)];
                         case 4: return [2 /*return*/];
                     }
                 });
@@ -353,7 +375,7 @@ exports.retrieveMeetingsOfClubs = function (clubs, connection) { return __awaite
 var retrieveMeeting = function (club, connection) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var meetingData, error_8;
+                var meetingData, error_9;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -365,9 +387,9 @@ var retrieveMeeting = function (club, connection) { return __awaiter(void 0, voi
                                 return [2 /*return*/, resolve(meetingData[0])];
                             return [2 /*return*/, resolve({ id: null, bookId: null, dateAndTime: null, clubId: club.id })];
                         case 2:
-                            error_8 = _a.sent();
-                            console.error(error_8);
-                            return [2 /*return*/, reject(error_8)];
+                            error_9 = _a.sent();
+                            console.error(error_9);
+                            return [2 /*return*/, reject(error_9)];
                         case 3: return [2 /*return*/];
                     }
                 });

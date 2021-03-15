@@ -4,25 +4,24 @@ const searchGoogleBooksByTitle = async (query, apiKey) => {
 
     console.log('Google books query from client.')
 
-    return new Promise((resolve, reject) => {
-    
-        let reply = { error: false, data: "payload" }
+    return new Promise(async (resolve, reject) => {
 
         const formattedQuery = query.toString().replace(/ /g, "+")
 
-        axios.get(`https://www.googleapis.com/books/v1/volumes?q=intitle:${formattedQuery}&maxResults=20&key=${apiKey}`)
-        .then((response) => {
+        try {
 
-           resolve(response.data.items)
-    
-        })
-        .catch((error) => {
+            const response = await axios.get(`https://www.googleapis.com/books/v1/volumes?q=intitle:${formattedQuery}&maxResults=20&key=${apiKey}`)
 
-            reject(error.message)
+            return resolve(response.data.items)
 
-        })
+        }
+        catch (error) {
 
+            return reject(error.message)
+
+        }
     })
+
 }
 
 module.exports = { searchGoogleBooksByTitle }

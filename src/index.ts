@@ -15,7 +15,7 @@ const { insertUser, retrieveUser, retrieveUserIdAndSocketIdByUsername, updateSoc
 const { insertInvite, retrieveInvitesOfUser, deleteInvite } = require('./tableInterfaces/inviteTable')
 
 import { BookObject, ClubInvitePost, ClubInviteData, ClubObject, ClubPostObject, ShelfObject, UserLoginDataObject, UserLoginObject, UserObject, UserRegisterObject, ClubInviteReceive, MemberData, AcceptClubInviteObject, MeetingObject } from '../../types' 
-import { insertClub, insertClubMember, insertMeeting, retrieveClubsOfUser } from "./tableInterfaces/clubTables"
+import { deleteMeeting, insertClub, insertClubMember, insertMeeting, retrieveClubsOfUser } from "./tableInterfaces/clubTables"
 import ConnectionWrapper from './database'
 
 fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
@@ -547,6 +547,36 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
                 console.error(error)
                 
                 socket.emit('post_meeting_error', error)
+
+            }
+            finally {
+
+                connection.release()
+
+            }
+
+        })
+
+        socket.on('delete_meeting' , async (meeting: MeetingObject) => {
+
+            const connection = new (ConnectionWrapper as any)()
+
+            try {
+
+                await connection.getPoolConnection()
+
+                const message = await deleteMeeting(meeting, connection)
+
+                const club = await connection.query("SELECT * FROM Club WHERE id = ?", [meeting.clubId])
+
+                socket.emit('delete_meeting_response', message)
+
+                io.to(club.name).emit('refresh_clubs')
+
+            }
+            catch(error) {
+
+                socket.emit('delete_meeting_error', error)
 
             }
             finally {

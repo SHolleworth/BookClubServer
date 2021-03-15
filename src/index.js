@@ -606,5 +606,37 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
                 }
             });
         }); });
+        socket.on('delete_meeting', function (meeting) { return __awaiter(void 0, void 0, void 0, function () {
+            var connection, message, club, error_18;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        connection = new database_1.default();
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 5, 6, 7]);
+                        return [4 /*yield*/, connection.getPoolConnection()];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, clubTables_1.deleteMeeting(meeting, connection)];
+                    case 3:
+                        message = _a.sent();
+                        return [4 /*yield*/, connection.query("SELECT * FROM Club WHERE id = ?", [meeting.clubId])];
+                    case 4:
+                        club = _a.sent();
+                        socket.emit('delete_meeting_response', message);
+                        io.to(club.name).emit('refresh_clubs');
+                        return [3 /*break*/, 7];
+                    case 5:
+                        error_18 = _a.sent();
+                        socket.emit('delete_meeting_error', error_18);
+                        return [3 /*break*/, 7];
+                    case 6:
+                        connection.release();
+                        return [7 /*endfinally*/];
+                    case 7: return [2 /*return*/];
+                }
+            });
+        }); });
     });
 });

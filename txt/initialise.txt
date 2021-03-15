@@ -88,4 +88,14 @@ CREATE TABLE clubMeeting (\
 	FOREIGN KEY (clubId) REFERENCES Club(id),\
 	PRIMARY KEY (id)\
 );
+
+CREATE TABLE meetingreply (\
+	id INT NOT NULL AUTO_INCREMENT,\
+	meetingId INT NOT NULL,\
+	memberId INT NOT NULL,\
+	reply VARCHAR(255) DEFAULT 'missing',\
+	FOREIGN KEY (meetingId) REFERENCES clubMeeting(id),\
+	FOREIGN KEY (memberId) REFERENCES ClubMember(id),\
+	PRIMARY KEY (id)\
+);
 	
