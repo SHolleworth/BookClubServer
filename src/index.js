@@ -42,7 +42,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
-var port = 3000;
 var io = require('socket.io')(server);
 var fs = require('fs');
 var searchGoogleBooksByTitle = require('./requestHandler').searchGoogleBooksByTitle;
@@ -58,7 +57,8 @@ fs.readFile('../apiKey.txt', 'utf8', function (err, data) {
         throw err;
     var apiKey = data;
     console.log("API key acquired.");
-    server.listen(port, function () {
+    server.listen(process.env.PORT || 3000, function () {
+        var port = server.address().port;
         console.log("Listening on port " + port);
     });
     configureConnectionPool();
