@@ -3,7 +3,6 @@ import { Socket } from "socket.io"
 const express = require('express')
 const app = express()
 const server = require('http').createServer(app)
-const port = 3000
 const io = require('socket.io')(server)
 const fs = require('fs')
 
@@ -26,8 +25,10 @@ fs.readFile('../apiKey.txt', 'utf8', (err: Error, data: string) => {
 
     console.log("API key acquired.")
 
-    server.listen(port, () => {
+    server.listen(process.env.PORT || 3000, () => {
 
+        const port = server.address().port
+        
         console.log("Listening on port " + port)
 
     });
