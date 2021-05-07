@@ -58,7 +58,7 @@ const insertUser = async (user: UserRegisterObject, connection: Connection) => {
 
             if (user.length) {
 
-                return resolve("That username already exists.")
+                return reject("That username already exists.")
 
             } 
 
@@ -102,6 +102,16 @@ const retrieveUser = async (userToRetrieve: UserLoginObject, connection: Connect
 
             }
 
+            if (existingUsers.length < 1) {
+
+                const error = `Error, no user found with username: ${userToRetrieve.username}.`
+
+                console.error(error)
+
+                return reject(error)
+
+            }
+
             const hash = existingUsers[0].password
 
             bcrypt.compare(userToRetrieve.password, hash, (err: Error, result: boolean) => {
@@ -131,7 +141,7 @@ const retrieveUser = async (userToRetrieve: UserLoginObject, connection: Connect
 
                     console.error(error)
 
-                    return resolve(error)
+                    return reject(error)
 
                 }
 

@@ -85,7 +85,7 @@ var insertUser = function (user, connection) { return __awaiter(void 0, void 0, 
                         case 2:
                             user_1 = _b.sent();
                             if (user_1.length) {
-                                return [2 /*return*/, resolve("That username already exists.")];
+                                return [2 /*return*/, reject("That username already exists.")];
                             }
                             return [4 /*yield*/, hashPassword(password)];
                         case 3:
@@ -109,7 +109,7 @@ var retrieveUser = function (userToRetrieve, connection) { return __awaiter(void
     return __generator(this, function (_a) {
         console.log("Attempting to retrieve user: " + userToRetrieve.username);
         return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(void 0, void 0, void 0, function () {
-                var existingUsers_1, error, hash, error_3;
+                var existingUsers_1, error, error, hash, error_3;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -119,6 +119,11 @@ var retrieveUser = function (userToRetrieve, connection) { return __awaiter(void
                             existingUsers_1 = _a.sent();
                             if (existingUsers_1.length > 1) {
                                 error = "Error, more than 1 user with name " + userToRetrieve.username + " found.";
+                                console.error(error);
+                                return [2 /*return*/, reject(error)];
+                            }
+                            if (existingUsers_1.length < 1) {
+                                error = "Error, no user found with username: " + userToRetrieve.username + ".";
                                 console.error(error);
                                 return [2 /*return*/, reject(error)];
                             }
@@ -137,7 +142,7 @@ var retrieveUser = function (userToRetrieve, connection) { return __awaiter(void
                                 else {
                                     var error = "Incorrect Password";
                                     console.error(error);
-                                    return resolve(error);
+                                    return reject(error);
                                 }
                             });
                             return [3 /*break*/, 3];
